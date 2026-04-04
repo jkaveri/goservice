@@ -1,0 +1,110 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Echo Service",
+    "version": "1.0"
+  },
+  "host": "example.com",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/echo": {
+      "post": {
+        "summary": "Echo a message",
+        "description": "Echo a message",
+        "operationId": "Echo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/EchoResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EchoRequest"
+            }
+          }
+        ]
+      }
+    },
+    "/echo/error": {
+      "get": {
+        "summary": "Return a structured error for testing",
+        "description": "Returns a not-found style error through wraperror and the gateway error handler",
+        "operationId": "EchoError",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/EchoErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/echo/error/wrapped": {
+      "get": {
+        "summary": "Structured error from wrapped error chain",
+        "description": "Demonstrates errors.Wrap layers plus WithCode / WithUserMessage for gateway responses",
+        "operationId": "EchoWrappedError",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/EchoWrappedErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "EchoErrorResponse": {
+      "type": "object"
+    },
+    "EchoRequest": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "EchoResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "EchoWrappedErrorResponse": {
+      "type": "object"
+    }
+  },
+  "securityDefinitions": {
+    "X-Janus-Token": {
+      "type": "apiKey",
+      "name": "X-Janus-Token",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "X-Janus-Token": []
+    }
+  ]
+}

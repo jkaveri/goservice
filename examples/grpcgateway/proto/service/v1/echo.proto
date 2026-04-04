@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package service.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "github.com/jkaveri/goservice/examples/grpcgateway/proto/gen/go/service/v1";
+option optimize_for = SPEED;
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Echo Service"
+    version: "1.0"
+  }
+
+  schemes: HTTPS
+  host: "example.com"
+  consumes: "application/json"
+  produces: "application/json"
+
+  security_definitions: {
+    security: [
+      {
+        key: "X-Janus-Token"
+        value: {
+          type: TYPE_API_KEY
+          name: "X-Janus-Token"
+          in: IN_HEADER
+        }
+      }
+    ]
+  }
+  security: {
+    security_requirement: {
+      key: "X-Janus-Token"
+      value: {}
+    }
+  }
+};
+
+service EchoService {
+  rpc Echo(EchoRequest) returns (EchoResponse) {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Echo a message"
+      description: "Echo a message"
+    };
+
+    option (google.api.http) = {
+      post: "/echo"
+      body: "*"
+    };
+  }
+
+  // EchoError always fails; intended for exercising the grpc-gateway error handler (structured JSON).
+  rpc EchoError(EchoErrorRequest) returns (EchoErrorResponse) {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Return a structured error for testing"
+      description: "Returns a not-found style error through wraperror and the gateway error handler"
+    };
+
+    option (google.api.http) = {get: "/echo/error"};
+  }
+
+  // EchoWrappedError fails with a multi-layer errors.Wrap chain. Logs retain the full stack;
+  // the HTTP JSON body uses WithUserMessage for a safe client-facing string (see service implementation).
+  rpc EchoWrappedError(EchoWrappedErrorRequest) returns (EchoWrappedErrorResponse) {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Structured error from wrapped error chain"
+      description: "Demonstrates errors.Wrap layers plus WithCode / WithUserMessage for gateway responses"
+    };
+
+    option (google.api.http) = {get: "/echo/error/wrapped"};
+  }
+}
+
+message EchoRequest {
+  string message = 1 [(validate.rules).string.min_len = 1];
+}
+
+message EchoResponse {
+  string message = 1;
+}
+
+message EchoErrorRequest {}
+
+message EchoErrorResponse {}
+
+message EchoWrappedErrorRequest {}
+
+message EchoWrappedErrorResponse {}
