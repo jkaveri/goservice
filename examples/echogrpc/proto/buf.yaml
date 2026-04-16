@@ -1,5 +1,4 @@
 version: v2
-name: buf.build/toolsfdg/goservice
 deps:
   - buf.build/googleapis/googleapis
 lint:

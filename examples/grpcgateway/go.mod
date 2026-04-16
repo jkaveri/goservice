@@ -1,17 +1,14 @@
 module github.com/jkaveri/goservice/examples/grpcgateway
 
-go 1.25.0
+go 1.26.1
 
-replace (
-	github.com/jkaveri/goservice => ../../
-	github.com/jkaveri/goservice/logger/zap => ../../logger/zap
-)
+replace github.com/jkaveri/goservice => ../../
 
 require (
-	git.toolsfdg.net/fe/golog v1.1.0
-	github.com/jkaveri/goservice v0.0.0
 	github.com/envoyproxy/protoc-gen-validate v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
+	github.com/jkaveri/golog/v2 v2.1.0
+	github.com/jkaveri/goservice v0.0.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260316180232-0b37fe3546d5
 	google.golang.org/grpc v1.79.3

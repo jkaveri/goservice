@@ -16,6 +16,7 @@ func newHostnameEnricher() golog.Enricher {
 
 func (*hostnameEnricher) Enrich(ctx context.Context, b *golog.RecordBuilder) {
 	_ = ctx
+
 	name, _ := os.Hostname()
 	b.AddAttr(golog.String("hostname", name))
 }

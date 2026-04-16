@@ -31,8 +31,12 @@ func UnaryInterceptor(
 
 		receiveAttrs := []golog.Attr{}
 		if !pruneLogMetadata {
-			receiveAttrs = append(receiveAttrs, golog.Int("metadata_keys", len(md)))
+			receiveAttrs = append(
+				receiveAttrs,
+				golog.Int("metadata_keys", len(md)),
+			)
 		}
+
 		log.Info("receive request", receiveAttrs...)
 
 		// Handle request

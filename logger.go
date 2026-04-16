@@ -7,5 +7,7 @@ import (
 )
 
 func initLogger(cfg *Config) {
-	check.PanicIfError(golog.InitDefault(cfg.Log.toGologConfig(), newHostnameEnricher()))
+	check.PanicIfError(
+		golog.InitDefault(cfg.Log.toGologConfig(), newHostnameEnricher()),
+	)
 }

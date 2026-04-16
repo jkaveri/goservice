@@ -17,11 +17,13 @@ const (
 	// CodeNotFound represents resource not found errors (404 Not Found)
 	CodeNotFound = "not_found"
 
-	// CodeUnauthorized represents forbidden access (403 Forbidden): authenticated
+	// CodeUnauthorized represents forbidden access (403 Forbidden):
+	// authenticated
 	// but not permitted.
 	CodeUnauthorized = "forbidden"
 
-	// CodeNotAuthenticated represents authentication required (401 Unauthorized)
+	// CodeNotAuthenticated represents authentication required (401
+	// Unauthorized)
 	CodeNotAuthenticated = "not_authenticated"
 
 	// CodeDuplicated represents duplicate resource errors (409 Conflict)

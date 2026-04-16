@@ -52,13 +52,16 @@ type LogConfig struct {
 // toGologConfig converts LogConfig to golog.Config for [golog.InitDefault] /
 // [golog.NewLogger].
 func (c LogConfig) toGologConfig() golog.Config {
-	formatStr := strings.TrimSpace(ramda.DefaultFn(c.getDefaultFormat, c.Format))
+	formatStr := strings.TrimSpace(
+		ramda.DefaultFn(c.getDefaultFormat, c.Format),
+	)
 	level := parseLogLevel(c.Level)
 
 	cfg := golog.Config{
 		Level:  level,
 		Output: "",
 	}
+
 	switch strings.ToLower(formatStr) {
 	case "json":
 		cfg.Format = golog.FormatJSON
