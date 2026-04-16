@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-04-16
+
+### Changes
+- enhance code (746a65b)
+- init goservice (b0f6cea)
 ## [1.6.0] - 2026-03-23
 
 ### Changes
@@ -65,7 +70,8 @@ All notable changes to this project will be documented in this file.
 
 - go service
 
-[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/jkaveri/goservice/compare/v0.0.0...v1.0.0
 [1.6.0]: https://github.com/jkaveri/goservice/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/jkaveri/goservice/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/jkaveri/goservice/compare/v1.3.0...v1.4.0
