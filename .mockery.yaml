@@ -1,12 +1,9 @@
 template: testify
-# Same directory as the file that declares the interface (see mockery template vars).
-dir: "{{.InterfaceDir}}"
-# Suffix _test.go keeps mocks out of non-test builds (otherwise testify ends up in library builds).
-filename: "mock_{{.InterfaceName | lower }}_test.go"
-# Same Go package as the interface.
-pkgname: "{{.SrcPackageName}}"
-# Required in-package: cannot reuse the interface name (e.g. Writer) as the mock struct type.
-structname: "{{.Mock}}{{.InterfaceName}}"
+filename: "{{.InterfaceName | lower }}.go"
+structname: "{{.InterfaceName}}"
+dir: "{{.InterfaceDir}}/mock"
+pkgname: "mock{{.SrcPackageName}}"
+include-auto-generated: false
 packages:
   github.com/jkaveri/goservice:
     config:
