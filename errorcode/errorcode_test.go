@@ -94,6 +94,19 @@ func TestNewError(t *testing.T) {
 	}
 }
 
+func TestNewErrorf(t *testing.T) {
+	err := errorcode.NewErrorf("CUSTOM", "user %s not found", "alice")
+	assert.Equal(t, "user alice not found", err.Error())
+
+	// No args: format string is not passed to fmt.Sprintf; safe for arbitrary text.
+	errLiteral := errorcode.NewErrorf("C", "plain literal")
+	assert.Equal(t, "plain literal", errLiteral.Error())
+
+	// Dynamic text with "%" is fine when supplied as a formatted value.
+	errPct := errorcode.NewErrorf("C", "%s", "100% done")
+	assert.Equal(t, "100% done", errPct.Error())
+}
+
 func TestNotFound(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -120,6 +133,12 @@ func TestNotFound(t *testing.T) {
 			assert.True(t, errorcode.IsNotFound(err))
 		})
 	}
+}
+
+func TestNotFoundf(t *testing.T) {
+	err := errorcode.NotFoundf("widget %d missing", 42)
+	assert.Equal(t, "widget 42 missing", err.Error())
+	assert.True(t, errorcode.IsNotFound(err))
 }
 
 func TestUnauthorized(t *testing.T) {
