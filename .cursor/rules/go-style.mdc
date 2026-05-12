@@ -1,0 +1,80 @@
+---
+description: Go style, layout, errors, concurrency, and goservice package layout
+globs: **/*.go
+alwaysApply: false
+---
+
+# Scope
+
+These rules apply to **`goservice/`** (module `github.com/jkaveri/goservice`), a reusable Go library that provides gRPC/HTTP gateway helpers, structured errors, error codes, validation, logging integration, and small shared utilities.
+
+# Formatting
+
+- **Lint/format:** Run **`golangci-lint run --fix`** using the repo's shared **`.golangci.yaml`** so configured formatters (e.g. **`gofumpt`** / **`golines`**) apply consistently.
+- **Fallback:** `gofmt` and `goimports` if no shared config is available.
+- **Struct literals:** Prefer literals.
+- **Slices:** Represent unknown or zero-length with a **nil** slice (`var s []T`). Use `[]T{}` only when a non-nil empty slice is required.
+
+# Documentation and comments
+
+- **Exported names:** Full-sentence doc comment immediately before the declaration; it **starts with the name**. Same for nontrivial unexported types.
+- **Style:** Simple prose, complete sentences. Explain _what_, not lengthy _how_. Avoid boilerplate.
+- **Searchable debt tags:** When leaving known follow-up work in code, use an uppercase searchable marker at the start of the comment: **`TODO:`** for planned improvements, **`FIXME:`** for incorrect or risky behavior, **`HACK:`** for intentional shortcuts, and **`NOTE:`** for important context that should survive refactors. Include enough context to act later, and link to a spec or issue when the work is non-trivial. Do not leave vague comments like `// TODO clean this up`.
+
+# Naming
+
+- **Packages:** Short, lowercase, no underscores. Avoid generic **`util`** / **`common`**, names that shadow stdlib (**`errors`** — except where this library deliberately re-exports a wrapper, e.g. **`github.com/jkaveri/goservice/errors`**), or names easy to misuse.
+- **Types and variables:** Name length matches scope — short (`i`, `r`, `w`) locally; longer names for broader scope.
+- **Receivers:** Short, derived from the type; consistent on the type; no underscores.
+- **Constants:** **MixedCaps**; exported start uppercase. Prefer `MaxBufferSize`, not `MAX_BUFFER_SIZE`.
+- **Initialisms:** `URL`, `API`, `HTML`, `ID` — not `Url`, `Html`. Respect exported vs unexported (`HTTPServer` vs `httpServer`).
+- **Accessors:** `Name()` not `GetName()` for trivial getters; use verbs like **`Fetch`** / **`Compute`** for heavy or remote work.
+- **Patterns:** Nouns for structs (`Request`), **`-er`** for interfaces (`Reader`), verbs for funcs/methods (`Read`, `Process`).
+- **No stutter:** `widget.New` not `widget.NewWidget`.
+
+# Error handling
+
+- **Errors are values:** Handle them; do not ignore with `_` unless deliberately documented.
+- **Compose with goservice/errors:** Use **`errors.Wrap`** / **`errors.Wrapf`** / **`errors.New`** from **`github.com/jkaveri/goservice/errors`** for project errors. Do not use `fmt.Errorf` to wrap errors.
+- **Coded errors:** Tag errors with an **`errorcode`** when callers (HTTP/gRPC boundaries) need to discriminate behavior. Prefer typed constructors (e.g. **`errorcode.NotFound`**, **`errorcode.TooManyRequests`**) over raw **`errorcode.NewError`** when a matching code exists.
+- **Messages:** Concise, **lowercase** start, **no trailing punctuation** on the message string.
+- **Inspect:** **`errors.Is`** / **`errors.As`** (and **`errorcode.Is*`** helpers for code-tagged errors); avoid string comparison on wrapped errors.
+- **Panic:** Only for unrecoverable programmer bugs; normal paths return **`error`**.
+
+# Concurrency
+
+- **Simplest tool:** Channels for ownership transfer, coordination, pipelines; **mutexes** / **atomics** when guarding shared state is clearer.
+- **Concurrency vs parallelism:** Concurrency is about structuring programs; it does not guarantee parallel execution.
+- **Goroutine lifetimes:** Clear exit strategy; use **`context`** or channels to cancel; avoid leaks.
+
+# Interfaces and design
+
+- **Small interfaces:** One responsibility; compose larger behavior. Define interfaces in the package that consumes them — narrow ports, not wide grab-bag contracts.
+- **Composition, not inheritance:** Prefer **embedding** and small structs over deep hierarchies.
+- **Testability:** For I/O, HTTP, time, randomness — depend on a **small interface** of what you need, not the full client. Wire concretes at constructor sites; tests use fakes/mocks.
+- **Zero value:** Design types usable at zero when practical (`sync.Mutex`, `bytes.Buffer`).
+- **Prefer copying to dependencies:** When a piece of code is small, copy it rather than introduce a new dependency; a little copying is often better than a little dependency.
+- **Clarity:** Prefer straightforward code over clever one-liners; avoid **reflection** when a normal pattern works.
+
+# Configuration and wiring
+
+- **Avoid package globals for config:** Parse and validate near the program boundary; pass dependencies explicitly into constructors. The library exposes helpers such as **`config.go`** / **`load_config.go`**, **`grpc_server.go`**, **`http_server.go`**, and **`run.go`** at the module root for callers to compose; library code itself should not read environment or files implicitly inside leaf packages.
+
+# goservice layout
+
+- **Module root (`./`)** — Top-level helpers callers wire into their service: server bootstrap (**`grpc_server.go`**, **`http_server.go`**, **`run.go`**), **`config.go`** / **`load_config.go`**, **`healthcheck.go`**, **`logger.go`**, **`log_enrichers.go`**.
+- **`cmd/goservice/`** — Reference / CLI entry (`main`) used to exercise the library; not the consumer's binary.
+- **Public packages** — Flat, capability-scoped libraries used by consumers:
+  - **`errors/`** — wrappers over `pkg/errors` plus code/user-message/metadata annotations (see also **`errors/mock/`**).
+  - **`errorcode/`** — standardized error codes with constructor, **`*f`**, **`Is*`**, and **`With*`** helpers (see [errorcode/README.md](errorcode/README.md)).
+  - **`grpc/`** — gRPC interceptors and grpc-gateway helpers, including **`grpc/interceptors/wraperror`** for HTTP/gRPC code mapping.
+  - **`validate/`**, **`check/`**, **`clock/`**, **`idgen/`**, **`env/`** — small shared utilities. Each interface package has a **`mock/`** sub-package generated by mockery.
+- **`examples/`** — Runnable examples (**`examples/echogrpc/`**, **`examples/grpcgateway/`**) showing how to compose the library.
+- **Unit tests:** Live next to the code they test (`foo_test.go`); run with `go test ./...`. No DB, no network — use fakes/mocks.
+
+# Tooling and review
+
+- **`go test ./...`**, **`go build ./...`**.
+- **`go vet`**, **`golangci-lint run --fix`**, **staticcheck** (via CI / local) as appropriate.
+- **Mock generation:** `mockery` driven by **`.mockery.yaml`** (output under each interface package's **`mock/`** sub-package).
+- Baseline style: [Go Code Review Comments](https://go.dev/wiki/CodeReviewComments).

@@ -1,0 +1,207 @@
+---
+globs: **/*_test.go
+alwaysApply: false
+---
+# Go unit tests (goservice)
+
+These rules apply when editing **`globs`** paths above: co-located `*_test.go` under packages that use **mocks/fakes**, **no real network**, and **`go test ./...`**. Matched tests MUST use **`package <name>_test`** and cover **exported** API only — see **External test package and public API**.
+
+---
+
+## External test package and public API
+
+- **External test package (required):** Every `*_test.go` matched by these rules MUST declare **`package <name>_test`**, where **`<name>`** is the **production package name** of the directory (same as `package foo` in non-test `.go` files there). Do **not** use **`package foo`** in those test files (no white-box/same-package tests under this rule).
+- **Public API only:** Tests MUST observe behavior only through **exported** identifiers: types, methods, functions, and constants of the package under test. Do not call or assert on **unexported** symbols, unexported struct fields, or file-local helpers. If behavior is not reachable from exports, shape **exported** constructors / options so the public contract is testable.
+- **Imports:** The test file imports the module path of the package under test (e.g. `errorcode "github.com/jkaveri/goservice/errorcode"`) and refers to API with that import name (`errorcode.NotFound`, `errorcode.IsNotFound`).
+- **Table types:** `Args` / `Expects` should use exported domain types from that import, not unexported types from the implementation package.
+
+---
+
+## Correctness over green builds
+
+Do not weaken production behavior, paper over failures, or delete/skip tests to go green. Fix the code or fix the expectation so the test still represents the intended requirement.
+
+---
+
+## Table-driven shape
+
+Define **inside** each `TestXxx` (not at package level):
+
+- **`type Args struct { ... }`** — inputs to the unit under test.
+- **`type Expects struct { ... }`** — expected outputs (`want`, `wantErr`, full structs when practical).
+- **`type Deps struct { ... }`** — mocks / fakes (**omit entirely** if unused).
+
+Table:
+
+```go
+testCases := []struct {
+    name    string
+    args    Args
+    expects Expects
+    mocks   func(d Deps, a Args) // omit field when no deps
+}{ ... }
+```
+
+**Rules**
+
+- **Case names:** `lowercase-kebab-case` (e.g. `success-wrap-error`, `code-not-found`).
+- **No mocks in table rows:** Never put `NewMock*(t)` or generated mock instances in the slice literal. Mocks that need `*testing.T` must be created **inside** `t.Run` with that subtest's `t`, then passed through `Deps`.
+- **Static config in table is OK:** e.g. fixed strings, plain structs — anything that does not need the subtest's `t`.
+- **Omit `Deps` / `mocks`:** If there are no dependencies, drop the `Deps` type and the `mocks` field from the table struct.
+- **Linear runner only:** The `t.Run` body should follow one shared path: build inputs/context from `tc.args`, create fresh `Deps`, apply `tc.mocks`, construct SUT, act, assert. Do not branch on `tc.name`, `scenario`, `mode`, or any opaque table field to choose different setup, mock, act, or assert paths. **Do not branch on a sentinel `expects` value** to switch between assertion strategies for the same result — use one full expected value per row and one assertion call instead.
+- **Split non-linear scenarios:** If cases cannot share that one linear flow, create separate parent `TestXxx` functions. Each parent test may have its own table only when its rows share the same arrange/act/assert shape.
+- **Time / randomness:** Use fixed times (`time.Date(...)`) or injectable clocks (mock **`github.com/jkaveri/goservice/clock`**); avoid bare `time.Now()` in assertions unless time is what you test.
+- **I/O boundaries:** **Stub** HTTP clients, clocks, randomness — no real network endpoints in unit tests.
+- **Isolation:** Prefer fresh dependencies per `t.Run`; avoid shared mutable state across subtests unless the isolation is explicit and obvious.
+
+### `Deps` and `mocks` (project convention)
+
+- **`Deps` holds every injected dependency** the unit under test takes (clocks, idgens, error-shaped stubs, etc.). Do **not** pass parallel mock arguments alongside **`Deps`** in **`mocks`** — keep **`func(d Deps)`** or **`func(d Deps, a Args)`** only; wire clock/idgen expectations via **`d.clk`**, **`d.idGen`**, etc.
+
+### Generated mocks for interfaces
+
+- Use generated mocks for all configured interfaces instead of adding hand-written stub structs when mockery output already exists. Examples in this repo:
+  - **`github.com/jkaveri/goservice/clock/mock`** — `mockclock.NewClock(t)`, **`EXPECT().UTC()`** / **`Now()`** as needed.
+  - **`github.com/jkaveri/goservice/idgen/mock`** — `mockidgen.NewGenerator(t)`, **`EXPECT().New()`** / **`NewString()`**.
+  - **`github.com/jkaveri/goservice/errors/mock`** — `mockerrors.NewCodeError(t)` and related error-shape mocks used when testing wrappers that inspect error annotations.
+
+  Do **not** add **`fixedClock` / `fixedIDGen`** or similar one-off stubs for interfaces that already have generated mocks.
+
+---
+
+## Assertions
+
+- **`require`** when later steps are meaningless without success (nil checks, setup).
+- **`assert`** for value comparisons.
+- **Errors:** `assert.Equal(t, tc.expects.wantErr, err != nil, "unexpected error: %v", err)`. For code-tagged errors, also assert on **`errorcode.Is*`** / **`errors.Code(err)`** rather than message strings.
+- Prefer **one `assert.Equal(t, want, got)`** on the **full** expected value (struct, slice, or table `expects.want` typed as the full result) instead of many per-field asserts, whenever the value is stable and the failure diff stays readable.
+
+### Whole-value `Equal` — exceptions
+
+Use a **small helper** or a **short prelude** when a single struct `Equal` is misleading:
+
+1. **Non-deterministic fields** (wall time, randomness, generated IDs): prefer fixed times and injected clocks in `want`; if the field is still dynamic, copy from `got` into `want` immediately before `Equal`, or assert that field separately only when unavoidable.
+2. **Maps / collections** where you need something other than key-for-key map equality: compare a **derived value** (e.g. sorted keys, small aggregator struct) with one `Equal`.
+
+---
+
+## Mocking
+
+- Do **not** change **`.mockery.yaml`** without explicit confirmation first.
+- From **`package foo_test`**, mock only through exported constructors, **`With…`** options, or exported fields that accept the interface under test.
+- Prefer generated mockery mocks for configured interfaces. Import them from the interface package's **`mock/`** sub-package (e.g. `mockclock "github.com/jkaveri/goservice/clock/mock"`). Generated structs are named after the interface and constructed with **`New{InterfaceName}(t)`**.
+- Generate mocks with **`mockery`** (config in **`.mockery.yaml`**).
+- Prefer **`.EXPECT()`** on generated mocks. Configure expectations **before** constructing the SUT, and keep them minimal but strict.
+- Use small in-file testify mocks (**`On` / `Return` / `Run`**) only for tiny interfaces or boundaries not covered by generated mocks.
+- When a test simulates a missing resource, return **`errorcode.NotFound(...)`** (or wrap with **`errorcode.WithNotFound`**) so callers can rely on **`errors.Code(err)`** / **`errorcode.IsNotFound`**.
+
+---
+
+## Execution flow (per subtest — linear)
+
+1. **Arrange** — create mocks / `Deps` using the subtest's `*testing.T`
+2. **Mock** — `tc.mocks(deps, tc.args)` if present
+3. **Construct** — system under test
+4. **Act**
+5. **Assert** — compare with `tc.expects`
+
+Mocks that need `t` must be created inside **`t.Run`** with the subtest's `t`, then placed into `Deps` before `tc.mocks` runs.
+
+```go
+// BAD — mock in table / parent t
+testCases := []struct {
+    deps Deps
+}{
+    {deps: Deps{clk: mockclock.NewClock(t)}},
+}
+
+// GOOD — static config in table; mock inside t.Run
+testCases := []struct {
+    name string
+    id   string
+}{ /* ... */ }
+for _, tc := range testCases {
+    t.Run(tc.name, func(t *testing.T) {
+        deps := Deps{clk: mockclock.NewClock(t)}
+        // ...
+    })
+}
+```
+
+---
+
+## Forbidden patterns
+
+This list summarizes the rules above for review comments and quick scans:
+
+- Same-package tests or white-box access into unexported identifiers.
+- Changing production behavior, deleting tests, or skipping tests only to make a suite pass.
+- Mocks created from the parent test's `t`, mocks stored in table literals, or dependencies shared across subtests without clear isolation.
+- Table runners that branch on `tc.name`, `scenario`, `mode`, or any other opaque table field.
+- Table runners that branch on a **sentinel `expects` field** to switch between assertion strategies for the same result.
+- One table mixing unrelated arrange/act/assert flows.
+- Real external I/O in unit tests: no real HTTP, no dockerized deps.
+
+---
+
+## Template (mockery)
+
+Mocks are generated in `{interfacepkg}/mock/{interfacename | lower}.go`, package `mock{srcpkgname}`. Struct: `{Interface}`, constructor: `New{Interface}(t)`.
+
+```go
+package idgen_test
+
+import (
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+
+    "github.com/jkaveri/goservice/idgen"
+    mockidgen "github.com/jkaveri/goservice/idgen/mock"
+)
+
+func TestService_NewID(t *testing.T) {
+    type Args struct {
+        prefix string
+    }
+    type Expects struct {
+        want    string
+        wantErr bool
+    }
+    type Deps struct {
+        idGen *mockidgen.Generator
+    }
+
+    testCases := []struct {
+        name    string
+        args    Args
+        expects Expects
+        mocks   func(d Deps, a Args)
+    }{
+        {
+            name:    "success-new-id",
+            args:    Args{prefix: "u"},
+            expects: Expects{want: "u_abc", wantErr: false},
+            mocks: func(d Deps, a Args) {
+                d.idGen.EXPECT().NewString().Return("abc")
+            },
+        },
+    }
+
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            idGen := mockidgen.NewGenerator(t)
+            deps := Deps{idGen: idGen}
+            if tc.mocks != nil {
+                tc.mocks(deps, tc.args)
+            }
+            svc := idgen.NewService(deps.idGen)
+            got, err := svc.NewID(tc.args.prefix)
+            assert.Equal(t, tc.expects.wantErr, err != nil, "unexpected error: %v", err)
+            if !tc.expects.wantErr {
+                assert.Equal(t, tc.expects.want, got)
+            }
+        })
+    }
+}
+```

@@ -1,0 +1,92 @@
+---
+description: golog v2 levels, context, structured keys, boundary vs inner logging
+globs: **/*.go
+alwaysApply: false
+---
+
+# Logging (`github.com/jkaveri/golog/v2`)
+
+goservice uses **`github.com/jkaveri/golog/v2`** — structured logging on top of **`log/slog`**.
+
+**Bootstrap:** Consumers initialize logging at their service entry (e.g. **`cmd/goservice`** uses `golog.Init` or framework wiring). Within library code, assume logging is configured by the caller; **derive a context-aware logger** whenever `ctx` is available.
+
+**Philosophy:** Prefer fewer, clearer signals — not every `if err != nil` needs an **`Error`** line.
+
+---
+
+## Levels
+
+| Level     | Use for                                                                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Debug** | Diagnostics (verbose steps, cache keys, small payload snippets). Tune volume in prod via log level.                                                                           |
+| **Info**  | Normal operation; recoverable paths; **mid-chain** failures when you are **not** the final observability owner (often with **`WithError(err)`**).                             |
+| **Error** | **Authoritative** record: this layer **owns** the outcome and no outer component will emit the primary **`Error`** for that incident.                                         |
+
+- There is **no `Warn`** — use **`Info`** with clear wording.
+- Do **not** treat **`Error`** as "there is an `error` value in scope".
+
+---
+
+## Error severity and call chain
+
+**Goal:** At most **one `Error`** per logical failure. Avoid the same failure at **`Error`** in both a transport interceptor (e.g. **`grpc/interceptors/wraperror`**) and an inner function.
+
+- **Boundary / end of chain** (interceptors, `main`): use **`log.WithError(err).Error("…")`** when this is the **last** place that records the failure.
+- **Inner layers** that **return** `err` upward: prefer **`return err`**, or **`Info`** with **`WithError(err)`** for a breadcrumb. Do not duplicate **`Error`** up the stack.
+
+---
+
+## Context (mandatory for request-scoped work)
+
+```go
+log := golog.WithContext(ctx)
+```
+
+Use this `log` for all logs in that function so enrichers can attach `request_id`, `trace_id`, etc.
+
+---
+
+## Messages
+
+- **Language:** Human-readable **English**.
+- **Casing:** Prefer **lowercase** messages.
+- **Structure:** Put identifiers in **attributes**, not buried in free-form text.
+
+---
+
+## Structured fields
+
+```go
+log.Info("msg", golog.String("k", v), golog.Int("n", n))
+```
+
+**Stable keys for library code:** `request_id`, `trace_id`, `endpoint`, `code` (error code from **`errorcode`**). The library should not assume consumer-specific keys (tenant, user, etc.) exist.
+
+---
+
+## Prohibited / discouraged
+
+- **`Warn`** — not in this API.
+- **`Error`** at every layer for the same incident when a boundary already logs it.
+- Logging without **`WithContext(ctx)`** when `ctx` is available.
+- **Secrets**, tokens, credentials, **PII**, or full request/response bodies.
+
+---
+
+## Example (boundary)
+
+```go
+func UnaryInterceptor() grpc.UnaryServerInterceptor {
+    return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (interface{}, error) {
+        resp, err := next(ctx, req)
+        if err != nil {
+            golog.WithContext(ctx).
+                With(golog.String("endpoint", info.FullMethod)).
+                WithError(err).
+                Error("rpc error")
+            return nil, err
+        }
+        return resp, nil
+    }
+}
+```
