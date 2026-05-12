@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-05-12
+
+### Changes
+- feat: add formatted error constructors (#1) (620593d)
+- update .gitignore (5e4c8a6)
+- chore: reorganize mockery config to use dedicated mock/ subdirectories (bdb4dc6)
 ## [1.0.0] - 2026-04-16
 
 ### Changes
@@ -70,7 +76,8 @@ All notable changes to this project will be documented in this file.
 
 - go service
 
-[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/jkaveri/goservice/compare/v1.0.1...v1.1.0
 [1.0.0]: https://github.com/jkaveri/goservice/compare/v0.0.0...v1.0.0
 [1.6.0]: https://github.com/jkaveri/goservice/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/jkaveri/goservice/compare/v1.4.0...v1.5.0
