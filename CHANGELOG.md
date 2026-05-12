@@ -1,92 +1,41 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
 
 ## [1.1.0] - 2026-05-12
 
-### Changes
-- feat: add formatted error constructors (#1) (620593d)
-- update .gitignore (5e4c8a6)
-- chore: reorganize mockery config to use dedicated mock/ subdirectories (bdb4dc6)
+### Added
+
+- Formatted error constructors in `errorcode` (`NewErrorf`, `NotFoundf`,
+  `InvalidRequestf`, and the other `*f` variants) for `fmt`-style messages
+  without tripping `go vet` on dynamic plain-text messages ([#1](https://github.com/jkaveri/goservice/pull/1)).
+
+### Changed
+
+- Mockery: generated mocks are organized under dedicated `mock/` subdirectories
+  per package.
+- `.gitignore` updates.
+
+## [1.0.1] - 2026-04-16
+
+### Changed
+
+- Tag-only release on the same revision as v1.0.0 (module / release alignment).
+
 ## [1.0.0] - 2026-04-16
 
-### Changes
-- enhance code (746a65b)
-- init goservice (b0f6cea)
-## [1.6.0] - 2026-03-23
+### Added
 
-### Changes
-- feat(grpc): structured gateway errors and client-safe user messages (146baa6)
-
-## [1.5.0] - 2026-03-19
-
-### Changes
-- fix grpc shutdown (#8) (51b72a0)
-
-## [1.4.0] - 2026-03-18
-
-### Changes
-- feat: api doc endpoint (#7) (e483406)
-
-## [1.3.0] - 2026-03-13
-
-### Changes
-- fix release script (#6) (711cf37)
-
-## [1.2.0] - 2026-03-13
-
-### Changes
-- chore: add recovery interceptor, tooling, and release workflow (#5) (654d36c)
-
-## [1.2.0] - 2026-03-13
-
-### Changes
-- chore: add CHANGELOG, release script, and update deps (fcddbc0)
-- style: apply golangci-lint formatting (wsl, gofumpt) (096fcbf)
-- fix: resolve lint issues and add golangci config (d6cc567)
-- feat: add recovery interceptor as default gRPC interceptor (99273f3)
-
-## [1.1.3] - 2026-03-13
-
-### Changes
-
-- update golog version (#4)
-
-## [1.1.2] - 2026-03-12
-
-### Changes
-
-- fix wrong import path (#3)
-
-## [1.1.1] - 2026-03-10
-
-### Changes
-
-- enhance validate pkg (#2)
-
-## [1.1.0] - 2026-03-05
-
-### Changes
-
-- refactor: migrate from logger to golog package (#1)
-
-## [1.0.0] - 2025-08-07
-
-### Changes
-
-- go service
+- Initial public `github.com/jkaveri/goservice` module: gRPC and gateway helpers,
+  validation utilities, structured errors, logging integration, and repo
+  tooling.
 
 [Unreleased]: https://github.com/jkaveri/goservice/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/jkaveri/goservice/compare/v1.0.1...v1.1.0
-[1.0.0]: https://github.com/jkaveri/goservice/compare/v0.0.0...v1.0.0
-[1.6.0]: https://github.com/jkaveri/goservice/compare/v1.5.0...v1.6.0
-[1.5.0]: https://github.com/jkaveri/goservice/compare/v1.4.0...v1.5.0
-[1.4.0]: https://github.com/jkaveri/goservice/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/jkaveri/goservice/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/jkaveri/goservice/compare/v1.1.3...v1.2.0
-[1.2.0]: https://git.toolsfdg.net/henry-nguyen/goservice/compare/v1.1.3...v1.2.0
-[1.1.3]: https://git.toolsfdg.net/henry-nguyen/goservice/compare/v1.1.2...v1.1.3
-[1.1.2]: https://git.toolsfdg.net/henry-nguyen/goservice/compare/v1.1.1...v1.1.2
-[1.1.1]: https://git.toolsfdg.net/henry-nguyen/goservice/compare/v1.1.0...v1.1.1
-[1.1.0]: https://git.toolsfdg.net/henry-nguyen/goservice/compare/v1.0.0...v1.1.0
-[1.0.0]: https://git.toolsfdg.net/henry-nguyen/goservice/releases/tag/v1.0.0
+[1.0.1]: https://github.com/jkaveri/goservice/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/jkaveri/goservice/releases/tag/v1.0.0
