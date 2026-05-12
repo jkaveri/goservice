@@ -45,3 +45,35 @@ func IsInvalidRequest(err error) bool {
 func IsNotAuthenticated(err error) bool {
 	return CodeNotAuthenticated == errors.Code(err)
 }
+
+// IsTooManyRequests checks if the given error is a "too many requests" error.
+// Returns true if the error's code matches CodeTooManyRequests, false
+// otherwise.
+func IsTooManyRequests(err error) bool {
+	return CodeTooManyRequests == errors.Code(err)
+}
+
+// IsTimeout checks if the given error is a "timeout" error.
+// Returns true if the error's code matches CodeTimeout, false otherwise.
+func IsTimeout(err error) bool {
+	return CodeTimeout == errors.Code(err)
+}
+
+// IsUnavailable checks if the given error is an "unavailable" error.
+// Returns true if the error's code matches CodeUnavailable, false otherwise.
+func IsUnavailable(err error) bool {
+	return CodeUnavailable == errors.Code(err)
+}
+
+// IsUnimplemented checks if the given error is an "unimplemented" error.
+// Returns true if the error's code matches CodeUnimplemented, false otherwise.
+func IsUnimplemented(err error) bool {
+	return CodeUnimplemented == errors.Code(err)
+}
+
+// IsFailedPrecondition checks if the given error is a "failed precondition"
+// error. Returns true if the error's code matches CodeFailedPrecondition,
+// false otherwise.
+func IsFailedPrecondition(err error) bool {
+	return CodeFailedPrecondition == errors.Code(err)
+}

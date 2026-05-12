@@ -11,15 +11,20 @@ The `errorcode` package provides standardized error codes and utilities for cons
 
 ## Error Codes
 
-| Code     | Constant               | HTTP Status | Description                |
-| -------- | ---------------------- | ----------- | -------------------------- |
-| `000000` | `CodeNone`             | N/A         | No error (success state)   |
-| `300000` | `CodeInvalidRequest`   | 400         | Invalid request parameters |
-| `300001` | `CodeInternalServer`   | 500         | Internal server error      |
-| `300003` | `CodeDuplicated`       | 409         | Duplicate resource         |
-| `330001` | `CodeNotAuthenticated` | 401         | Authentication required    |
-| `340001` | `CodeUnauthorized`     | 401         | Unauthorized access        |
-| `350002` | `CodeNotFound`         | 404         | Resource not found         |
+| Code     | Constant                 | HTTP Status | Description                |
+| -------- | ------------------------ | ----------- | -------------------------- |
+| `000000` | `CodeNone`               | N/A         | No error (success state)   |
+| `300000` | `CodeInvalidRequest`     | 400         | Invalid request parameters |
+| `300001` | `CodeInternalServer`     | 500         | Internal server error      |
+| `300003` | `CodeDuplicated`         | 409         | Duplicate resource         |
+| `330001` | `CodeNotAuthenticated`   | 401         | Authentication required    |
+| `340001` | `CodeUnauthorized`       | 401         | Unauthorized access        |
+| `350002` | `CodeNotFound`           | 404         | Resource not found         |
+| N/A      | `CodeTooManyRequests`    | 429         | Rate limit exceeded        |
+| N/A      | `CodeTimeout`            | 504         | Deadline exceeded          |
+| N/A      | `CodeUnavailable`        | 503         | Service unavailable        |
+| N/A      | `CodeUnimplemented`      | 501         | Operation not implemented  |
+| N/A      | `CodeFailedPrecondition` | 412         | Failed precondition        |
 
 ## Usage
 
@@ -38,6 +43,11 @@ duplicatedErr := errorcode.Duplicated("email already exists")
 internalErr := errorcode.InternalServer("database connection failed")
 invalidReqErr := errorcode.InvalidRequest("missing required field")
 notAuthErr := errorcode.NotAuthenticated("login required")
+rateLimitErr := errorcode.TooManyRequests("rate limit exceeded")
+timeoutErr := errorcode.Timeout("request timed out")
+unavailableErr := errorcode.Unavailable("service unavailable")
+unimplementedErr := errorcode.Unimplemented("method not implemented")
+preconditionErr := errorcode.FailedPrecondition("resource not in required state")
 ```
 
 ### Checking Error Types
@@ -73,6 +83,26 @@ if errorcode.IsInvalidRequest(err) {
 
 if errorcode.IsNotAuthenticated(err) {
     // Handle authentication error
+}
+
+if errorcode.IsTooManyRequests(err) {
+    // Handle rate limit error
+}
+
+if errorcode.IsTimeout(err) {
+    // Handle deadline-exceeded error
+}
+
+if errorcode.IsUnavailable(err) {
+    // Handle service unavailable error
+}
+
+if errorcode.IsUnimplemented(err) {
+    // Handle unimplemented method error
+}
+
+if errorcode.IsFailedPrecondition(err) {
+    // Handle failed precondition error
 }
 ```
 

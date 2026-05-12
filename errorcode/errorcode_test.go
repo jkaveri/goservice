@@ -49,6 +49,31 @@ func TestErrorCodeConstants(t *testing.T) {
 			expected: "internal_server_error",
 			actual:   errorcode.CodeInternalServer,
 		},
+		{
+			name:     "CodeTooManyRequests should be too_many_requests",
+			expected: "too_many_requests",
+			actual:   errorcode.CodeTooManyRequests,
+		},
+		{
+			name:     "CodeTimeout should be timeout",
+			expected: "timeout",
+			actual:   errorcode.CodeTimeout,
+		},
+		{
+			name:     "CodeUnavailable should be unavailable",
+			expected: "unavailable",
+			actual:   errorcode.CodeUnavailable,
+		},
+		{
+			name:     "CodeUnimplemented should be unimplemented",
+			expected: "unimplemented",
+			actual:   errorcode.CodeUnimplemented,
+		},
+		{
+			name:     "CodeFailedPrecondition should be failed_precondition",
+			expected: "failed_precondition",
+			actual:   errorcode.CodeFailedPrecondition,
+		},
 	}
 
 	for _, tt := range tests {
@@ -279,4 +304,174 @@ func TestNotAuthenticated(t *testing.T) {
 			assert.True(t, errorcode.IsNotAuthenticated(err))
 		})
 	}
+}
+
+func TestTooManyRequests(t *testing.T) {
+	tests := []struct {
+		name     string
+		message  string
+		expected string
+	}{
+		{
+			name:     "should create too many requests error",
+			message:  "rate limit exceeded",
+			expected: "rate limit exceeded",
+		},
+		{
+			name:     "should create too many requests error with empty message",
+			message:  "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := errorcode.TooManyRequests(tt.message)
+			assert.NotNil(t, err)
+			assert.Equal(t, tt.expected, err.Error())
+			assert.True(t, errorcode.IsTooManyRequests(err))
+		})
+	}
+}
+
+func TestTooManyRequestsf(t *testing.T) {
+	err := errorcode.TooManyRequestsf("rate limit exceeded for user %s", "alice")
+	assert.Equal(t, "rate limit exceeded for user alice", err.Error())
+	assert.True(t, errorcode.IsTooManyRequests(err))
+}
+
+func TestTimeout(t *testing.T) {
+	tests := []struct {
+		name     string
+		message  string
+		expected string
+	}{
+		{
+			name:     "should create timeout error",
+			message:  "request timed out",
+			expected: "request timed out",
+		},
+		{
+			name:     "should create timeout error with empty message",
+			message:  "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := errorcode.Timeout(tt.message)
+			assert.NotNil(t, err)
+			assert.Equal(t, tt.expected, err.Error())
+			assert.True(t, errorcode.IsTimeout(err))
+		})
+	}
+}
+
+func TestTimeoutf(t *testing.T) {
+	err := errorcode.Timeoutf("request timed out after %ds", 30)
+	assert.Equal(t, "request timed out after 30s", err.Error())
+	assert.True(t, errorcode.IsTimeout(err))
+}
+
+func TestUnavailable(t *testing.T) {
+	tests := []struct {
+		name     string
+		message  string
+		expected string
+	}{
+		{
+			name:     "should create unavailable error",
+			message:  "service unavailable",
+			expected: "service unavailable",
+		},
+		{
+			name:     "should create unavailable error with empty message",
+			message:  "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := errorcode.Unavailable(tt.message)
+			assert.NotNil(t, err)
+			assert.Equal(t, tt.expected, err.Error())
+			assert.True(t, errorcode.IsUnavailable(err))
+		})
+	}
+}
+
+func TestUnavailablef(t *testing.T) {
+	err := errorcode.Unavailablef("service %s unavailable", "billing")
+	assert.Equal(t, "service billing unavailable", err.Error())
+	assert.True(t, errorcode.IsUnavailable(err))
+}
+
+func TestUnimplemented(t *testing.T) {
+	tests := []struct {
+		name     string
+		message  string
+		expected string
+	}{
+		{
+			name:     "should create unimplemented error",
+			message:  "method not implemented",
+			expected: "method not implemented",
+		},
+		{
+			name:     "should create unimplemented error with empty message",
+			message:  "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := errorcode.Unimplemented(tt.message)
+			assert.NotNil(t, err)
+			assert.Equal(t, tt.expected, err.Error())
+			assert.True(t, errorcode.IsUnimplemented(err))
+		})
+	}
+}
+
+func TestUnimplementedf(t *testing.T) {
+	err := errorcode.Unimplementedf("method %s not implemented", "GetUser")
+	assert.Equal(t, "method GetUser not implemented", err.Error())
+	assert.True(t, errorcode.IsUnimplemented(err))
+}
+
+func TestFailedPrecondition(t *testing.T) {
+	tests := []struct {
+		name     string
+		message  string
+		expected string
+	}{
+		{
+			name:     "should create failed precondition error",
+			message:  "resource not in required state",
+			expected: "resource not in required state",
+		},
+		{
+			name:     "should create failed precondition error with empty message",
+			message:  "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := errorcode.FailedPrecondition(tt.message)
+			assert.NotNil(t, err)
+			assert.Equal(t, tt.expected, err.Error())
+			assert.True(t, errorcode.IsFailedPrecondition(err))
+		})
+	}
+}
+
+func TestFailedPreconditionf(t *testing.T) {
+	err := errorcode.FailedPreconditionf("order %d already shipped", 7)
+	assert.Equal(t, "order 7 already shipped", err.Error())
+	assert.True(t, errorcode.IsFailedPrecondition(err))
 }

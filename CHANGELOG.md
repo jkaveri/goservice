@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New error codes in `errorcode` for common operational failures:
+  `too_many_requests`, `timeout`, `unavailable`, `unimplemented`, and
+  `failed_precondition`. Each ships with a constructor, an `*f` variant,
+  an `Is*` helper, and a `With*` wrapper, plus matching HTTP and gRPC
+  mappings in `grpc/interceptors/wraperror`.
+
 ## [1.1.0] - 2026-05-12
 
 ### Added

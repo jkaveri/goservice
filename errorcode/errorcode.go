@@ -36,6 +36,26 @@ const (
 	// CodeInternalServer represents internal server errors (500 Internal Server
 	// Error)
 	CodeInternalServer = "internal_server_error"
+
+	// CodeTooManyRequests represents rate-limited requests (429 Too Many
+	// Requests).
+	CodeTooManyRequests = "too_many_requests"
+
+	// CodeTimeout represents request deadline exceeded errors (504 Gateway
+	// Timeout).
+	CodeTimeout = "timeout"
+
+	// CodeUnavailable represents service unavailable errors (503 Service
+	// Unavailable).
+	CodeUnavailable = "unavailable"
+
+	// CodeUnimplemented represents unimplemented operation errors (501 Not
+	// Implemented).
+	CodeUnimplemented = "unimplemented"
+
+	// CodeFailedPrecondition represents failed precondition errors (412
+	// Precondition Failed).
+	CodeFailedPrecondition = "failed_precondition"
 )
 
 func formatMessage(format string, args ...any) string {
@@ -146,6 +166,69 @@ func NotAuthenticatedf(format string, args ...any) error {
 	return newCodedf(CodeNotAuthenticated, format, args...)
 }
 
+// TooManyRequests creates a new error with the CodeTooManyRequests code and
+// the specified message. Use this for 429 Too Many Requests scenarios such as
+// rate-limited requests.
+func TooManyRequests(message string) error {
+	return newCoded(CodeTooManyRequests, message)
+}
+
+// TooManyRequestsf is like [TooManyRequests] but supports fmt-style
+// formatting; see [NewErrorf].
+func TooManyRequestsf(format string, args ...any) error {
+	return newCodedf(CodeTooManyRequests, format, args...)
+}
+
+// Timeout creates a new error with the CodeTimeout code and the specified
+// message. Use this for 504 Gateway Timeout scenarios where a deadline was
+// exceeded.
+func Timeout(message string) error {
+	return newCoded(CodeTimeout, message)
+}
+
+// Timeoutf is like [Timeout] but supports fmt-style formatting; see
+// [NewErrorf].
+func Timeoutf(format string, args ...any) error {
+	return newCodedf(CodeTimeout, format, args...)
+}
+
+// Unavailable creates a new error with the CodeUnavailable code and the
+// specified message. Use this for 503 Service Unavailable scenarios.
+func Unavailable(message string) error {
+	return newCoded(CodeUnavailable, message)
+}
+
+// Unavailablef is like [Unavailable] but supports fmt-style formatting; see
+// [NewErrorf].
+func Unavailablef(format string, args ...any) error {
+	return newCodedf(CodeUnavailable, format, args...)
+}
+
+// Unimplemented creates a new error with the CodeUnimplemented code and the
+// specified message. Use this for 501 Not Implemented scenarios.
+func Unimplemented(message string) error {
+	return newCoded(CodeUnimplemented, message)
+}
+
+// Unimplementedf is like [Unimplemented] but supports fmt-style formatting;
+// see [NewErrorf].
+func Unimplementedf(format string, args ...any) error {
+	return newCodedf(CodeUnimplemented, format, args...)
+}
+
+// FailedPrecondition creates a new error with the CodeFailedPrecondition code
+// and the specified message. Use this for 412 Precondition Failed scenarios
+// where the system is not in the required state to execute the operation.
+func FailedPrecondition(message string) error {
+	return newCoded(CodeFailedPrecondition, message)
+}
+
+// FailedPreconditionf is like [FailedPrecondition] but supports fmt-style
+// formatting; see [NewErrorf].
+func FailedPreconditionf(format string, args ...any) error {
+	return newCodedf(CodeFailedPrecondition, format, args...)
+}
+
 // WithInvalidRequest wraps the error with the CodeInvalidRequest code.
 func WithInvalidRequest(err error) error {
 	return errors.WithCode(err, CodeInvalidRequest)
@@ -169,4 +252,29 @@ func WithDuplicated(err error) error {
 // WithInternalServer wraps the error with the CodeInternalServer code.
 func WithInternalServer(err error) error {
 	return errors.WithCode(err, CodeInternalServer)
+}
+
+// WithTooManyRequests wraps the error with the CodeTooManyRequests code.
+func WithTooManyRequests(err error) error {
+	return errors.WithCode(err, CodeTooManyRequests)
+}
+
+// WithTimeout wraps the error with the CodeTimeout code.
+func WithTimeout(err error) error {
+	return errors.WithCode(err, CodeTimeout)
+}
+
+// WithUnavailable wraps the error with the CodeUnavailable code.
+func WithUnavailable(err error) error {
+	return errors.WithCode(err, CodeUnavailable)
+}
+
+// WithUnimplemented wraps the error with the CodeUnimplemented code.
+func WithUnimplemented(err error) error {
+	return errors.WithCode(err, CodeUnimplemented)
+}
+
+// WithFailedPrecondition wraps the error with the CodeFailedPrecondition code.
+func WithFailedPrecondition(err error) error {
+	return errors.WithCode(err, CodeFailedPrecondition)
 }

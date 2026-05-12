@@ -117,6 +117,16 @@ func CodeToHTTPStatus(code string) int {
 		return http.StatusUnauthorized
 	case errorcode.CodeDuplicated:
 		return http.StatusConflict
+	case errorcode.CodeTooManyRequests:
+		return http.StatusTooManyRequests
+	case errorcode.CodeTimeout:
+		return http.StatusGatewayTimeout
+	case errorcode.CodeUnavailable:
+		return http.StatusServiceUnavailable
+	case errorcode.CodeUnimplemented:
+		return http.StatusNotImplemented
+	case errorcode.CodeFailedPrecondition:
+		return http.StatusPreconditionFailed
 	default:
 		return http.StatusInternalServerError
 	}
@@ -136,6 +146,16 @@ func CodeFromHTTPStatus(status int) string {
 		return errorcode.CodeNotAuthenticated
 	case http.StatusConflict:
 		return errorcode.CodeDuplicated
+	case http.StatusTooManyRequests:
+		return errorcode.CodeTooManyRequests
+	case http.StatusGatewayTimeout:
+		return errorcode.CodeTimeout
+	case http.StatusServiceUnavailable:
+		return errorcode.CodeUnavailable
+	case http.StatusNotImplemented:
+		return errorcode.CodeUnimplemented
+	case http.StatusPreconditionFailed:
+		return errorcode.CodeFailedPrecondition
 	default:
 		return errorcode.CodeInternalServer
 	}
@@ -155,6 +175,16 @@ func CodeToGRPC(code string) codes.Code {
 		return codes.Unauthenticated
 	case errorcode.CodeDuplicated:
 		return codes.AlreadyExists
+	case errorcode.CodeTooManyRequests:
+		return codes.ResourceExhausted
+	case errorcode.CodeTimeout:
+		return codes.DeadlineExceeded
+	case errorcode.CodeUnavailable:
+		return codes.Unavailable
+	case errorcode.CodeUnimplemented:
+		return codes.Unimplemented
+	case errorcode.CodeFailedPrecondition:
+		return codes.FailedPrecondition
 	default:
 		return codes.Internal
 	}
@@ -174,6 +204,16 @@ func CodeFromGRPC(code codes.Code) string {
 		return errorcode.CodeNotAuthenticated
 	case codes.AlreadyExists:
 		return errorcode.CodeDuplicated
+	case codes.ResourceExhausted:
+		return errorcode.CodeTooManyRequests
+	case codes.DeadlineExceeded:
+		return errorcode.CodeTimeout
+	case codes.Unavailable:
+		return errorcode.CodeUnavailable
+	case codes.Unimplemented:
+		return errorcode.CodeUnimplemented
+	case codes.FailedPrecondition:
+		return errorcode.CodeFailedPrecondition
 	default:
 		return errorcode.CodeInternalServer
 	}
@@ -195,6 +235,16 @@ func GenericMessageFromCode(err error) string {
 		return "not authenticated"
 	case errorcode.CodeDuplicated:
 		return "conflict"
+	case errorcode.CodeTooManyRequests:
+		return "too many requests"
+	case errorcode.CodeTimeout:
+		return "request timeout"
+	case errorcode.CodeUnavailable:
+		return "service unavailable"
+	case errorcode.CodeUnimplemented:
+		return "not implemented"
+	case errorcode.CodeFailedPrecondition:
+		return "failed precondition"
 	default:
 		return "internal server error"
 	}
