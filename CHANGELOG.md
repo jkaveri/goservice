@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an `Is*` helper, and a `With*` wrapper, plus matching HTTP and gRPC
   mappings in `grpc/interceptors/wraperror`.
 
+## [1.2.0] - 2026-05-12
+
+### Changes
+- Add errorcode.Wrap and Wrapf with unit tests. (25f4996)
+- remove unused command (1b8253e)
+- .cursor rules (a9c3325)
+- feat(errorcode): add too_many_requests, timeout, unavailable, unimplemented, failed_precondition (00e068e)
+- commit code (38d77d7)
 ## [1.1.0] - 2026-05-12
 
 ### Added
@@ -43,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   validation utilities, structured errors, logging integration, and repo
   tooling.
 
-[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/jkaveri/goservice/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jkaveri/goservice/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/jkaveri/goservice/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/jkaveri/goservice/releases/tag/v1.0.0
