@@ -35,20 +35,64 @@ func (_m *MetadataError) EXPECT() *MetadataError_Expecter {
 	return &MetadataError_Expecter{mock: &_m.Mock}
 }
 
+// Error provides a mock function for the type MetadataError
+func (_mock *MetadataError) Error() string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Error")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// MetadataError_Error_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Error'
+type MetadataError_Error_Call struct {
+	*mock.Call
+}
+
+// Error is a helper method to define mock.On call
+func (_e *MetadataError_Expecter) Error() *MetadataError_Error_Call {
+	return &MetadataError_Error_Call{Call: _e.mock.On("Error")}
+}
+
+func (_c *MetadataError_Error_Call) Run(run func()) *MetadataError_Error_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MetadataError_Error_Call) Return(s string) *MetadataError_Error_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MetadataError_Error_Call) RunAndReturn(run func() string) *MetadataError_Error_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Metadata provides a mock function for the type MetadataError
-func (_mock *MetadataError) Metadata() map[string]interface{} {
+func (_mock *MetadataError) Metadata() map[string]any {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Metadata")
 	}
 
-	var r0 map[string]interface{}
-	if returnFunc, ok := ret.Get(0).(func() map[string]interface{}); ok {
+	var r0 map[string]any
+	if returnFunc, ok := ret.Get(0).(func() map[string]any); ok {
 		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]interface{})
+			r0 = ret.Get(0).(map[string]any)
 		}
 	}
 	return r0
@@ -71,12 +115,12 @@ func (_c *MetadataError_Metadata_Call) Run(run func()) *MetadataError_Metadata_C
 	return _c
 }
 
-func (_c *MetadataError_Metadata_Call) Return(stringToIfaceVal map[string]interface{}) *MetadataError_Metadata_Call {
-	_c.Call.Return(stringToIfaceVal)
+func (_c *MetadataError_Metadata_Call) Return(stringToV map[string]any) *MetadataError_Metadata_Call {
+	_c.Call.Return(stringToV)
 	return _c
 }
 
-func (_c *MetadataError_Metadata_Call) RunAndReturn(run func() map[string]interface{}) *MetadataError_Metadata_Call {
+func (_c *MetadataError_Metadata_Call) RunAndReturn(run func() map[string]any) *MetadataError_Metadata_Call {
 	_c.Call.Return(run)
 	return _c
 }

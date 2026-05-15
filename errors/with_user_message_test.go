@@ -1,9 +1,11 @@
 package errors_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	errors "github.com/jkaveri/goservice/errors"
 )
@@ -87,6 +89,92 @@ func TestWithUserMessage_GetUserMessage(t *testing.T) {
 			}
 
 			assert.Equal(t, tc.expects.errStr, tc.args.err.Error())
+		})
+	}
+}
+
+func TestWithUserMessage_Error(t *testing.T) {
+	type Args struct {
+		inner       error
+		userMessage string
+	}
+	type Expects struct {
+		want          string
+		wantUserMsg   string
+	}
+
+	inner := errors.New("technical failure")
+
+	testCases := []struct {
+		name    string
+		args    Args
+		expects Expects
+	}{
+		{
+			name: "returns-inner-not-user-message",
+			args: Args{
+				inner:       inner,
+				userMessage: "please try again",
+			},
+			expects: Expects{
+				want:        "technical failure",
+				wantUserMsg: "please try again",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := errors.WithUserMessage(tc.args.inner, tc.args.userMessage)
+			require.NotNil(t, got)
+			assert.Equal(t, tc.expects.want, got.Error())
+			assert.Equal(t, tc.expects.wantUserMsg, errors.GetUserMessage(got))
+			assert.Equal(t, tc.expects.want, tc.args.inner.Error())
+		})
+	}
+}
+
+func TestWithUserMessage_Format(t *testing.T) {
+	type Args struct {
+		err error
+	}
+	type Expects struct {
+		wantS         string
+		wantQ         string
+		wantV         string
+		vPlusContains []string
+	}
+
+	inner := errors.New("inner")
+	err := errors.WithUserMessage(inner, "try again")
+
+	testCases := []struct {
+		name    string
+		args    Args
+		expects Expects
+	}{
+		{
+			name: "with-user-message",
+			args: Args{err: err},
+			expects: Expects{
+				wantS:         "inner",
+				wantQ:         "inner",
+				wantV:         "inner",
+				vPlusContains: []string{`user_message="try again"`, "inner"},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expects.wantS, fmt.Sprintf("%s", tc.args.err))
+			assert.Equal(t, tc.expects.wantQ, fmt.Sprintf("%q", tc.args.err))
+			assert.Equal(t, tc.expects.wantV, fmt.Sprintf("%v", tc.args.err))
+
+			gotPlus := fmt.Sprintf("%+v", tc.args.err)
+			for _, sub := range tc.expects.vPlusContains {
+				assert.Contains(t, gotPlus, sub)
+			}
 		})
 	}
 }
