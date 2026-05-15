@@ -2,60 +2,7 @@ package errors
 
 import (
 	stderrors "errors"
-
-	"github.com/pkg/errors"
 )
-
-// New returns an error with the supplied message.
-// New also records the stack trace at the point it was called.
-func New(msg string) error {
-	return errors.New(msg)
-}
-
-// Wrap returns an error annotating err with a stack trace
-// at the point Wrap is called, and the supplied message.
-// If err is nil, Wrap returns nil.
-func Wrap(err error, msg string) error {
-	return errors.Wrap(err, msg)
-}
-
-// Wrapf returns an error annotating err with a stack trace
-// at the point Wrapf is called, and the format specifier.
-// If err is nil, Wrapf returns nil.
-func Wrapf(err error, msg string, args ...interface{}) error {
-	return errors.Wrapf(err, msg, args...)
-}
-
-// Errorf formats according to a format specifier and returns the string
-// as a value that satisfies error.
-// Errorf also records the stack trace at the point it was called.
-func Errorf(msg string, args ...interface{}) error {
-	return errors.Errorf(msg, args...)
-}
-
-// Unwrap returns the result of calling the Unwrap method on err, if err's
-// type contains an Unwrap method returning error.
-// Otherwise, Unwrap returns nil.
-//
-// Unwrap returns nil if the Unwrap method returns []error.
-func Unwrap(err error) error {
-	return stderrors.Unwrap(err)
-}
-
-// Cause returns the underlying cause of the error, if possible.
-// An error value has a cause if it implements the following
-// interface:
-//
-//	type causer interface {
-//	       Cause() error
-//	}
-//
-// If the error does not implement Cause, the original error will
-// be returned. If the error is nil, nil will be returned without further
-// investigation.
-func Cause(err error) error {
-	return errors.Cause(err)
-}
 
 // Is reports whether any error in err's tree matches target.
 //
@@ -101,4 +48,11 @@ func Is(err error, target error) bool {
 // error, or to any interface type.
 func As(err error, target any) bool {
 	return stderrors.As(err, target)
+}
+
+// Join create and error which contains all none nil errors
+//
+// this function returns nil when all errors are nil
+func Join(errs ...error) error {
+	return stderrors.Join(errs...)
 }

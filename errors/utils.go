@@ -1,25 +1,32 @@
 package errors
 
-// doUnwrap call fn(err) to handle the error
-// if fn(err) return true, then stop the iteration
-// if fn(err) return false, then continue the iteration
-func doUnwrap(err error, fn func(err error) bool) {
+// WalkErrorChain visits err and its Unwrap() ancestors depth-first.
+// For Unwrap() []error, each element is walked in order. If fn returns true,
+// traversal stops.
+// A nil err does not invoke fn.
+func WalkErrorChain(err error, fn func(error) bool) {
+	walkErrorChain(err, fn)
+}
+
+func walkErrorChain(err error, fn func(error) bool) bool {
 	if err == nil {
-		return
+		return false
 	}
 
 	if fn(err) {
-		return
+		return true
 	}
 
-	switch unwrapped := err.(type) {
-	case interface{ Unwrap() error }:
-		doUnwrap(unwrapped.Unwrap(), fn)
-	case interface{ Cause() error }:
-		doUnwrap(unwrapped.Cause(), fn)
+	switch e := err.(type) {
 	case interface{ Unwrap() []error }:
-		for _, e := range unwrapped.Unwrap() {
-			doUnwrap(e, fn)
+		for _, item := range e.Unwrap() {
+			if walkErrorChain(item, fn) {
+				return true
+			}
 		}
+	case interface{ Unwrap() error }:
+		return walkErrorChain(e.Unwrap(), fn)
 	}
+
+	return false
 }

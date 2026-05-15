@@ -1,12 +1,14 @@
 package errors
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
 )
 
 type CodeError interface {
 	Code() string
+	Error() string
 }
 
 // WithCode decorate error with a code
@@ -18,32 +20,25 @@ func WithCode(err error, code string) error {
 	}
 
 	return &withCode{
-		cause: err,
-		code:  code,
+		err:  err,
+		code: code,
 	}
 }
 
-// Code get latest error code in the error chain
+// Code returns the first CodeError code in err's chain, or "" if none.
 func Code(err error) string {
-	code := ""
+	if codeErr, ok := stderrors.AsType[CodeError](err); ok {
+		return codeErr.Code()
+	}
 
-	doUnwrap(err, func(err error) bool {
-		if u, ok := err.(CodeError); ok {
-			code = u.Code()
-			return true
-		}
-
-		return false
-	})
-
-	return code
+	return ""
 }
 
 // ContainsCode check to see error code in the chain or not?
 func ContainsCode(err error, code string) bool {
 	contains := false
 
-	doUnwrap(err, func(err error) bool {
+	WalkErrorChain(err, func(err error) bool {
 		if u, ok := err.(CodeError); ok {
 			if u.Code() == code {
 				contains = true
@@ -58,8 +53,8 @@ func ContainsCode(err error, code string) bool {
 }
 
 type withCode struct {
-	cause error
-	code  string
+	err  error
+	code string
 }
 
 func (w *withCode) Code() string {
@@ -67,20 +62,18 @@ func (w *withCode) Code() string {
 }
 
 func (w *withCode) Error() string {
-	return w.cause.Error()
+	return w.err.Error()
 }
 
-func (w *withCode) Cause() error { return w.cause }
-
 func (w *withCode) Unwrap() error {
-	return w.cause
+	return w.err
 }
 
 func (w *withCode) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			_, _ = fmt.Fprintf(s, "[%s] %+v\n", w.code, w.Cause())
+			_, _ = fmt.Fprintf(s, "[%s] %+v\n", w.code, w.Unwrap())
 			return
 		}
 

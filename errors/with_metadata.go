@@ -1,75 +1,64 @@
 package errors
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
 )
 
 type MetadataError interface {
-	Metadata() map[string]interface{}
+	Metadata() map[string]any
+	Error() string
 }
 
 // WithCode decorate error with a code
 //
 // which can response to caller
-func WithMetadata(err error, extra map[string]interface{}) error {
+func WithMetadata(err error, extra map[string]any) error {
 	if err == nil {
 		return nil
 	}
 
 	return &withMetadata{
-		cause: err,
+		err:   err,
 		extra: extra,
 	}
 }
 
 type withMetadata struct {
-	cause error
-	extra map[string]interface{}
+	err   error
+	extra map[string]any
 }
 
-func (w *withMetadata) Metadata() map[string]interface{} {
+func (w *withMetadata) Metadata() map[string]any {
 	return w.extra
 }
 
 func (w *withMetadata) Error() string {
-	return w.cause.Error()
+	return w.err.Error()
 }
 
-func (w *withMetadata) Cause() error { return w.cause }
-
-// Unwrap provides compatibility for Go 1.13 error chains.
-func (w *withMetadata) Unwrap() error { return w.cause }
+func (w *withMetadata) Unwrap() error { return w.err }
 
 func (w *withMetadata) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			_, _ = fmt.Fprintf(s, "%+v\n", w.Cause())
+			_, _ = fmt.Fprintf(s, "%+v\n", w.Unwrap())
 			return
 		}
 
 		fallthrough
 	case 's', 'q':
-		_, _ = io.WriteString(s, w.cause.Error())
+		_, _ = io.WriteString(s, w.err.Error())
 	}
 }
 
 // Metadata get all etra information of the error
-func Metadata(err error) map[string]interface{} {
-	result := make(map[string]interface{})
+func Metadata(err error) map[string]any {
+	if metadataErr, ok := stderrors.AsType[MetadataError](err); ok {
+		return metadataErr.Metadata()
+	}
 
-	doUnwrap(err, func(err error) bool {
-		if u, ok := err.(MetadataError); ok {
-			extra := u.Metadata()
-
-			for k, v := range extra {
-				result[k] = v
-			}
-		}
-
-		return false
-	})
-
-	return result
+	return nil
 }

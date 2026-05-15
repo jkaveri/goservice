@@ -27,8 +27,6 @@ github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 h1:HWRh5R2+9EifMyIHV7ZV+MIZqgz
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0/go.mod h1:JfhWUomR1baixubs02l85lZYYOm7LV6om4ceouMv45c=
 github.com/jkaveri/goconfig v1.0.0 h1:+9crVODSP6wIGH0zMo+DAnUHLFw6IbSKER/tvBeaXKQ=
 github.com/jkaveri/goconfig v1.0.0/go.mod h1:X1DVmJjD5NunL1pZRr06bBzWnw4NHtHcIaD/HxmXx74=
-github.com/jkaveri/golog/v2 v2.0.0-20260328160400-9869d5da6652 h1:j3+aSaKf+b5XvGHAUfAAef7SusSPNeQ44BFZ38v7Urw=
-github.com/jkaveri/golog/v2 v2.0.0-20260328160400-9869d5da6652/go.mod h1:LsUFMJGZ47yv5iMA6F0hFguvgU7C4defPleBjNfbSNA=
 github.com/jkaveri/golog/v2 v2.1.0 h1:dZAKVGZkb65jS81F7yDG2l65avf/yAZCkaDln4HAJpM=
 github.com/jkaveri/golog/v2 v2.1.0/go.mod h1:LsUFMJGZ47yv5iMA6F0hFguvgU7C4defPleBjNfbSNA=
 github.com/jkaveri/ramda v1.1.0 h1:QTbQ/geHnRUPPYMOyZeTwvSVRDjfBVYPGWKqDi7PKVw=
