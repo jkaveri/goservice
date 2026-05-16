@@ -10,7 +10,7 @@ import (
 	"github.com/jkaveri/goservice/grpc/interceptors/wraperror"
 )
 
-func TestToStructured_UserMessage(t *testing.T) {
+func TestToStructured_Message(t *testing.T) {
 	type Args struct {
 		err error
 	}
@@ -25,17 +25,17 @@ func TestToStructured_UserMessage(t *testing.T) {
 		expects Expects
 	}{
 		{
-			name: "uses-error-string-when-no-user-message",
+			name: "uses-generic-message-when-no-with-message",
 			args: Args{err: errorcode.NotFound("internal detail")},
 			expects: Expects{
 				code:    errorcode.CodeNotFound,
-				message: "internal detail",
+				message: "not found",
 			},
 		},
 		{
 			name: "prefers-user-message-over-generic",
 			args: Args{
-				err: errors.WithUserMessage(
+				err: errors.WithMessage(
 					errorcode.NotFound("internal detail"),
 					"that product is not available",
 				),

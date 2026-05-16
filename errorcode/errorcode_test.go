@@ -1,12 +1,17 @@
 package errorcode_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jkaveri/goservice/errorcode"
 )
+
+func codedError(code, msg string) string {
+	return fmt.Sprintf("[%s] %s", code, msg)
+}
 
 func TestErrorCodeConstants(t *testing.T) {
 	tests := []struct {
@@ -114,22 +119,22 @@ func TestNewError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.NewError(tt.code, tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(tt.code, tt.message), err.Error())
 		})
 	}
 }
 
 func TestNewErrorf(t *testing.T) {
 	err := errorcode.NewErrorf("CUSTOM", "user %s not found", "alice")
-	assert.Equal(t, "user alice not found", err.Error())
+	assert.Equal(t, codedError("CUSTOM", "user alice not found"), err.Error())
 
 	// No args: format string is not passed to fmt.Sprintf; safe for arbitrary text.
 	errLiteral := errorcode.NewErrorf("C", "plain literal")
-	assert.Equal(t, "plain literal", errLiteral.Error())
+	assert.Equal(t, codedError("C", "plain literal"), errLiteral.Error())
 
 	// Dynamic text with "%" is fine when supplied as a formatted value.
 	errPct := errorcode.NewErrorf("C", "%s", "100% done")
-	assert.Equal(t, "100% done", errPct.Error())
+	assert.Equal(t, codedError("C", "100% done"), errPct.Error())
 }
 
 func TestNotFound(t *testing.T) {
@@ -154,7 +159,7 @@ func TestNotFound(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.NotFound(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeNotFound, tt.message), err.Error())
 			assert.True(t, errorcode.IsNotFound(err))
 		})
 	}
@@ -162,7 +167,7 @@ func TestNotFound(t *testing.T) {
 
 func TestNotFoundf(t *testing.T) {
 	err := errorcode.NotFoundf("widget %d missing", 42)
-	assert.Equal(t, "widget 42 missing", err.Error())
+	assert.Equal(t, codedError(errorcode.CodeNotFound, "widget 42 missing"), err.Error())
 	assert.True(t, errorcode.IsNotFound(err))
 }
 
@@ -188,7 +193,7 @@ func TestUnauthorized(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.Unauthorized(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeUnauthorized, tt.message), err.Error())
 			assert.True(t, errorcode.IsUnauthorized(err))
 		})
 	}
@@ -216,7 +221,7 @@ func TestDuplicated(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.Duplicated(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeDuplicated, tt.message), err.Error())
 			assert.True(t, errorcode.IsDuplicated(err))
 		})
 	}
@@ -244,7 +249,7 @@ func TestInternalServer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.InternalServer(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeInternalServer, tt.message), err.Error())
 			assert.True(t, errorcode.IsInternalServer(err))
 		})
 	}
@@ -272,7 +277,7 @@ func TestInvalidRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.InvalidRequest(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeInvalidRequest, tt.message), err.Error())
 			assert.True(t, errorcode.IsInvalidRequest(err))
 		})
 	}
@@ -300,7 +305,7 @@ func TestNotAuthenticated(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.NotAuthenticated(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeNotAuthenticated, tt.message), err.Error())
 			assert.True(t, errorcode.IsNotAuthenticated(err))
 		})
 	}
@@ -328,7 +333,7 @@ func TestTooManyRequests(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.TooManyRequests(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeTooManyRequests, tt.message), err.Error())
 			assert.True(t, errorcode.IsTooManyRequests(err))
 		})
 	}
@@ -336,7 +341,7 @@ func TestTooManyRequests(t *testing.T) {
 
 func TestTooManyRequestsf(t *testing.T) {
 	err := errorcode.TooManyRequestsf("rate limit exceeded for user %s", "alice")
-	assert.Equal(t, "rate limit exceeded for user alice", err.Error())
+	assert.Equal(t, codedError(errorcode.CodeTooManyRequests, "rate limit exceeded for user alice"), err.Error())
 	assert.True(t, errorcode.IsTooManyRequests(err))
 }
 
@@ -362,7 +367,7 @@ func TestTimeout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.Timeout(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeTimeout, tt.message), err.Error())
 			assert.True(t, errorcode.IsTimeout(err))
 		})
 	}
@@ -370,7 +375,7 @@ func TestTimeout(t *testing.T) {
 
 func TestTimeoutf(t *testing.T) {
 	err := errorcode.Timeoutf("request timed out after %ds", 30)
-	assert.Equal(t, "request timed out after 30s", err.Error())
+	assert.Equal(t, codedError(errorcode.CodeTimeout, "request timed out after 30s"), err.Error())
 	assert.True(t, errorcode.IsTimeout(err))
 }
 
@@ -396,7 +401,7 @@ func TestUnavailable(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.Unavailable(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeUnavailable, tt.message), err.Error())
 			assert.True(t, errorcode.IsUnavailable(err))
 		})
 	}
@@ -404,7 +409,7 @@ func TestUnavailable(t *testing.T) {
 
 func TestUnavailablef(t *testing.T) {
 	err := errorcode.Unavailablef("service %s unavailable", "billing")
-	assert.Equal(t, "service billing unavailable", err.Error())
+	assert.Equal(t, codedError(errorcode.CodeUnavailable, "service billing unavailable"), err.Error())
 	assert.True(t, errorcode.IsUnavailable(err))
 }
 
@@ -430,7 +435,7 @@ func TestUnimplemented(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.Unimplemented(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeUnimplemented, tt.message), err.Error())
 			assert.True(t, errorcode.IsUnimplemented(err))
 		})
 	}
@@ -438,7 +443,7 @@ func TestUnimplemented(t *testing.T) {
 
 func TestUnimplementedf(t *testing.T) {
 	err := errorcode.Unimplementedf("method %s not implemented", "GetUser")
-	assert.Equal(t, "method GetUser not implemented", err.Error())
+	assert.Equal(t, codedError(errorcode.CodeUnimplemented, "method GetUser not implemented"), err.Error())
 	assert.True(t, errorcode.IsUnimplemented(err))
 }
 
@@ -464,7 +469,7 @@ func TestFailedPrecondition(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := errorcode.FailedPrecondition(tt.message)
 			assert.NotNil(t, err)
-			assert.Equal(t, tt.expected, err.Error())
+			assert.Equal(t, codedError(errorcode.CodeFailedPrecondition, tt.message), err.Error())
 			assert.True(t, errorcode.IsFailedPrecondition(err))
 		})
 	}
@@ -472,6 +477,6 @@ func TestFailedPrecondition(t *testing.T) {
 
 func TestFailedPreconditionf(t *testing.T) {
 	err := errorcode.FailedPreconditionf("order %d already shipped", 7)
-	assert.Equal(t, "order 7 already shipped", err.Error())
+	assert.Equal(t, codedError(errorcode.CodeFailedPrecondition, "order 7 already shipped"), err.Error())
 	assert.True(t, errorcode.IsFailedPrecondition(err))
 }

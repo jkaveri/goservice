@@ -10,25 +10,15 @@ type StackError interface {
 	Error() string
 }
 
-// WithStack annotates err with a stack trace at the point WithStack was called.
-// If err is nil, WithStack returns nil.
-func WithStack(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	return &withStack{
-		error: err,
-		stack: callers(),
-	}
-}
-
 type withStack struct {
 	error
 	*stack
 }
 
 func (w *withStack) Unwrap() error { return w.error }
+
+// HasStack is always true for errors that carry a captured stack.
+func (w *withStack) HasStack() bool { return true }
 
 func (w *withStack) Format(s fmt.State, verb rune) {
 	switch verb {

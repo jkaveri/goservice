@@ -25,11 +25,15 @@ func ToStructured(err error) *StructuredError {
 	}
 
 	code := getErrorCode(err)
-	metadata := errors.Metadata(err)
 
-	msg := errors.GetUserMessage(err)
+	metadata := make(map[string]interface{}, len(errors.Metadata(err))+1)
+	for k, v := range errors.Metadata(err) {
+		metadata[k] = v
+	}
+
+	msg := errors.Message(err)
 	if msg == "" {
-		msg = err.Error()
+		msg = GenericMessageFromCode(err)
 	}
 
 	// fallback for grpc-gateway handler

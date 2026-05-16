@@ -3,7 +3,6 @@ package validate
 import (
 	lib "github.com/go-playground/validator/v10"
 	"github.com/jkaveri/goservice/errorcode"
-	errors "github.com/jkaveri/goservice/errors"
 )
 
 func ValidateStruct(val interface{}) error {
@@ -19,7 +18,7 @@ func ValidateStruct(val interface{}) error {
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "failed to validate struct")
+		return err
 	}
 
 	return nil

@@ -1,0 +1,5 @@
+exclude_files: []
+exclude_dirs:
+  - mock
+min_coverage: 80
+min_file_coverage: 80
