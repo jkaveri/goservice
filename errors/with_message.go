@@ -18,15 +18,25 @@ type MessageError interface {
 	Error() string
 }
 
-// WithMessage wraps err with a user-facing message. The returned value's
-// Error() includes both message and err; Message() returns only message.
-// If err is nil, WithMessage returns nil. When HasStack(err) is false, a stack
-// trace is captured at this call site (same policy as Wrap).
-func WithMessage(err error, message string) error {
-	if err == nil {
-		return nil
-	}
+// NewMessage returns a MessageError with no wrapped cause. Error() and
+// Message() are message. Prefer WithMessage when adding client text to an
+// existing error chain.
+func NewMessage(message string) error {
+	return WithMessage(nil, message)
+}
 
+// NewMessagef is like NewMessage but formats message with fmt.Sprintf.
+func NewMessagef(format string, args ...interface{}) error {
+	return WithMessagef(nil, format, args...)
+}
+
+// WithMessage wraps err with a user-facing message. The returned value's
+// Error() includes both message and err when err is non-nil; Message() returns
+// only message. When err is nil, the result is a non-nil MessageError with
+// Unwrap() == nil and Error() equal to message (user-facing text only, no
+// internal chain). When HasStack(err) is false, a stack trace is captured at
+// this call site (same policy as Wrap); a nil err has no stack until wrapped.
+func WithMessage(err error, message string) error {
 	stacked := ensureStack(err)
 
 	return &withMessage{
@@ -37,12 +47,7 @@ func WithMessage(err error, message string) error {
 }
 
 // WithMessagef is like WithMessage but formats message with fmt.Sprintf.
-// If err is nil, WithMessagef returns nil.
 func WithMessagef(err error, format string, args ...interface{}) error {
-	if err == nil {
-		return nil
-	}
-
 	stacked := ensureStack(err)
 
 	return &withMessage{
@@ -56,7 +61,8 @@ func WithMessagef(err error, format string, args ...interface{}) error {
 // It walks err's Unwrap chain and joins each MessageError.Message() segment
 // with ": ", outermost first. Layers that do not implement MessageError are
 // skipped (for example the root stdlib or fundamental error), so callers only
-// surface annotations added with WithMessage or WithMessagef. For nil err,
+// surface annotations added with NewMessage, NewMessagef, WithMessage, or
+// WithMessagef. For nil err,
 // Message returns an empty string.
 func Message(err error) string {
 	var (
@@ -93,7 +99,13 @@ func (w *withMessage) Message() string {
 // added.
 func (w *withMessage) HasStack() bool { return w.hasStack }
 
-func (w *withMessage) Error() string { return fmt.Sprintf("%s: %s", w.msg, w.err.Error()) }
+func (w *withMessage) Error() string {
+	if w.err == nil {
+		return w.msg
+	}
+
+	return fmt.Sprintf("%s: %s", w.msg, w.err.Error())
+}
 
 func (w *withMessage) Unwrap() error { return w.err }
 
@@ -101,14 +113,29 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%s\n%+v", w.msg, w.Unwrap())
+			fmt.Fprintf(s, "%s", w.msg)
+
+			if w.err != nil {
+				fmt.Fprintf(s, "\n%+v", w.Unwrap())
+			}
+
 			return
 		}
 
 		fallthrough
 	case 's':
+		if w.err == nil {
+			fmt.Fprintf(s, "%s", w.msg)
+			return
+		}
+
 		fmt.Fprintf(s, "%s: %s", w.msg, w.err.Error())
 	case 'q':
+		if w.err == nil {
+			fmt.Fprintf(s, "%q", w.msg)
+			return
+		}
+
 		fmt.Fprintf(s, "%q", w.Error())
 	}
 }

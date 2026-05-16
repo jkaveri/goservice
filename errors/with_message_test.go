@@ -11,8 +11,29 @@ import (
 	errors "github.com/jkaveri/goservice/errors"
 )
 
+func TestNewMessage(t *testing.T) {
+	got := errors.NewMessage("slug already in use")
+	require.NotNil(t, got)
+	assert.Equal(t, "slug already in use", got.Error())
+	assert.Equal(t, "slug already in use", errors.Message(got))
+	assert.Nil(t, errors.Unwrap(got))
+	assert.False(t, errors.HasStack(got))
+}
+
+func TestNewMessagef(t *testing.T) {
+	got := errors.NewMessagef("step %d failed", 3)
+	require.NotNil(t, got)
+	assert.Equal(t, "step 3 failed", got.Error())
+	assert.Equal(t, "step 3 failed", errors.Message(got))
+}
+
 func TestWithMessage_nilErr(t *testing.T) {
-	assert.Nil(t, errors.WithMessage(nil, "ignored"))
+	got := errors.WithMessage(nil, "slug already in use")
+	require.NotNil(t, got)
+	assert.Equal(t, "slug already in use", got.Error())
+	assert.Equal(t, "slug already in use", errors.Message(got))
+	assert.Nil(t, errors.Unwrap(got))
+	assert.False(t, errors.HasStack(got))
 }
 
 func TestWithMessage(t *testing.T) {
@@ -36,6 +57,11 @@ func TestWithMessage(t *testing.T) {
 			args:    Args{err: root, message: "outer"},
 			expects: Expects{wantError: "outer: root"},
 		},
+		{
+			name:    "nil-err-message-only",
+			args:    Args{err: nil, message: "slug already in use"},
+			expects: Expects{wantError: "slug already in use"},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -43,6 +69,14 @@ func TestWithMessage(t *testing.T) {
 			got := errors.WithMessage(tc.args.err, tc.args.message)
 			require.NotNil(t, got)
 			assert.Equal(t, tc.expects.wantError, got.Error())
+			assert.Equal(t, tc.args.message, errors.Message(got))
+
+			if tc.args.err == nil {
+				assert.Nil(t, errors.Unwrap(got))
+				assert.False(t, errors.HasStack(got))
+				return
+			}
+
 			assert.True(t, errors.Is(got, tc.args.err))
 			assert.True(t, errors.HasStack(got))
 			assert.Contains(t, fmt.Sprintf("%+v", got), "root")
@@ -53,7 +87,10 @@ func TestWithMessage(t *testing.T) {
 }
 
 func TestWithMessagef_nilErr(t *testing.T) {
-	assert.Nil(t, errors.WithMessagef(nil, "ignored %s", "x"))
+	got := errors.WithMessagef(nil, "step %d failed", 3)
+	require.NotNil(t, got)
+	assert.Equal(t, "step 3 failed", got.Error())
+	assert.Equal(t, "step 3 failed", errors.Message(got))
 }
 
 func TestWithMessagef(t *testing.T) {
@@ -82,6 +119,15 @@ func TestWithMessagef(t *testing.T) {
 			},
 			expects: Expects{wantError: "step 3 failed: root"},
 		},
+		{
+			name: "nil-err-formatted-message-only",
+			args: Args{
+				err:    nil,
+				format: "step %d failed",
+				args:   []any{3},
+			},
+			expects: Expects{wantError: "step 3 failed"},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -89,6 +135,12 @@ func TestWithMessagef(t *testing.T) {
 			got := errors.WithMessagef(tc.args.err, tc.args.format, tc.args.args...)
 			require.NotNil(t, got)
 			assert.Equal(t, tc.expects.wantError, got.Error())
+
+			if tc.args.err == nil {
+				assert.Nil(t, errors.Unwrap(got))
+				return
+			}
+
 			assert.True(t, errors.Is(got, tc.args.err))
 			assert.True(t, errors.HasStack(got))
 		})
@@ -117,6 +169,11 @@ func TestMessage(t *testing.T) {
 			name:    "plain-fundamental",
 			args:    Args{err: errors.New("x")},
 			expects: Expects{want: ""},
+		},
+		{
+			name:    "message-only-new-message",
+			args:    Args{err: errors.NewMessage("slug already in use")},
+			expects: Expects{want: "slug already in use"},
 		},
 		{
 			name: "stdlib-without-message-interface",
@@ -248,6 +305,18 @@ func TestWithMessage_Format(t *testing.T) {
 				wantQ:           "\"annot: stdlib leaf\"",
 				wantVPlusPrefix: "annot\nstdlib leaf",
 				vPlusContains:   []string{"runtime."},
+			},
+		},
+		{
+			name: "nil-cause-message-only",
+			args: Args{
+				err: errors.WithMessage(nil, "slug already in use"),
+			},
+			expects: Expects{
+				wantS:     "slug already in use",
+				wantV:     "slug already in use",
+				wantQ:     "\"slug already in use\"",
+				wantVPlus: "slug already in use",
 			},
 		},
 	}
