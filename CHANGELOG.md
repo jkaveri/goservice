@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an `Is*` helper, and a `With*` wrapper, plus matching HTTP and gRPC
   mappings in `grpc/interceptors/wraperror`.
 
+## [1.4.0] - 2026-05-16
+
+### Changes
+- refactor: rework error wrapping and stacks (#3) (23c5bbc)
 ## [1.3.0] - 2026-05-15
 
 ### Changes
@@ -55,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   validation utilities, structured errors, logging integration, and repo
   tooling.
 
-[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/jkaveri/goservice/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/jkaveri/goservice/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jkaveri/goservice/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/jkaveri/goservice/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jkaveri/goservice/compare/v1.0.1...v1.1.0
