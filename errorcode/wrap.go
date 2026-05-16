@@ -7,6 +7,10 @@ import errors "github.com/jkaveri/goservice/errors"
 // preserves err for use with [errors.Is] / [errors.As] / [errors.Unwrap].
 // If err is nil, Wrap returns nil.
 func Wrap(err error, code string, msg string) error {
+	if err == nil {
+		return nil
+	}
+
 	return errors.WithCode(errors.Wrap(err, msg), code)
 }
 
@@ -15,5 +19,9 @@ func Wrap(err error, code string, msg string) error {
 // call site and preserves err for use with [errors.Is] / [errors.As] /
 // [errors.Unwrap]. If err is nil, Wrapf returns nil.
 func Wrapf(err error, code string, format string, args ...any) error {
+	if err == nil {
+		return nil
+	}
+
 	return errors.WithCode(errors.Wrapf(err, format, args...), code)
 }

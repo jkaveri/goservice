@@ -43,5 +43,5 @@ func TestUnaryInterceptor_usesFriendlyValidationMessage(t *testing.T) {
 	require.Error(t, err)
 	assert.False(t, called)
 	assert.Equal(t, errorcode.CodeInvalidRequest, svcerrors.Code(err))
-	assert.Equal(t, "Message: value length must be at least 1 runes", err.Error())
+	assert.Equal(t, "[invalid_request] Message: value length must be at least 1 runes", err.Error())
 }

@@ -3,7 +3,6 @@ package errors
 import (
 	stderrors "errors"
 	"fmt"
-	"io"
 )
 
 type CodeError interface {
@@ -11,17 +10,21 @@ type CodeError interface {
 	Error() string
 }
 
-// WithCode decorate error with a code
-//
-// which can response to caller
+// WithCode wraps err with a stable string code for callers and transport
+// mapping.
+// If err is nil, WithCode returns nil. When err has no stack yet, a stack trace
+// is captured at this call site (see HasStack).
 func WithCode(err error, code string) error {
 	if err == nil {
 		return nil
 	}
 
+	stacked := ensureStack(err)
+
 	return &withCode{
-		err:  err,
-		code: code,
+		err:      stacked,
+		code:     code,
+		hasStack: stacked != nil,
 	}
 }
 
@@ -53,16 +56,21 @@ func ContainsCode(err error, code string) bool {
 }
 
 type withCode struct {
-	err  error
-	code string
+	err      error
+	code     string
+	hasStack bool
 }
 
 func (w *withCode) Code() string {
 	return w.code
 }
 
+// HasStack reports whether the wrapped chain had a stack when the code was
+// attached.
+func (w *withCode) HasStack() bool { return w.hasStack }
+
 func (w *withCode) Error() string {
-	return w.err.Error()
+	return fmt.Sprintf("[%s] %s", w.code, w.err.Error())
 }
 
 func (w *withCode) Unwrap() error {
@@ -73,12 +81,14 @@ func (w *withCode) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			_, _ = fmt.Fprintf(s, "[%s] %+v\n", w.code, w.Unwrap())
+			fmt.Fprintf(s, "[%s]\n\t%+v", w.code, w.Unwrap())
 			return
 		}
 
 		fallthrough
-	case 's', 'q':
-		_, _ = io.WriteString(s, w.Error())
+	case 's':
+		fmt.Fprintf(s, "[%s] %s", w.code, w.err.Error())
+	case 'q':
+		fmt.Fprintf(s, "%q", w.Error())
 	}
 }

@@ -1,6 +1,7 @@
 package errors_test
 
 import (
+	stderrors "errors"
 	"fmt"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestWithMessage(t *testing.T) {
 		message string
 	}
 	type Expects struct {
-		want string
+		wantError string
 	}
 
 	root := errors.New("root")
@@ -31,9 +32,9 @@ func TestWithMessage(t *testing.T) {
 		expects Expects
 	}{
 		{
-			name:    "annotates-message",
-			args:    Args{err: root, message: "while saving"},
-			expects: Expects{want: "while saving"},
+			name:    "prefixes-message",
+			args:    Args{err: root, message: "outer"},
+			expects: Expects{wantError: "outer: root"},
 		},
 	}
 
@@ -41,8 +42,12 @@ func TestWithMessage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := errors.WithMessage(tc.args.err, tc.args.message)
 			require.NotNil(t, got)
-			assert.Equal(t, tc.expects.want, got.Error())
-			assert.Equal(t, root, errors.Unwrap(got))
+			assert.Equal(t, tc.expects.wantError, got.Error())
+			assert.True(t, errors.Is(got, tc.args.err))
+			assert.True(t, errors.HasStack(got))
+			assert.Contains(t, fmt.Sprintf("%+v", got), "root")
+			assert.Contains(t, fmt.Sprintf("%+v", got), tc.args.message)
+			assert.Equal(t, fmt.Sprintf("%q", got.Error()), fmt.Sprintf("%q", got))
 		})
 	}
 }
@@ -58,7 +63,7 @@ func TestWithMessagef(t *testing.T) {
 		args   []any
 	}
 	type Expects struct {
-		want string
+		wantError string
 	}
 
 	root := errors.New("root")
@@ -72,10 +77,10 @@ func TestWithMessagef(t *testing.T) {
 			name: "formats-message",
 			args: Args{
 				err:    root,
-				format: "user %s not found",
-				args:   []any{"alice"},
+				format: "step %d failed",
+				args:   []any{3},
 			},
-			expects: Expects{want: "user alice not found"},
+			expects: Expects{wantError: "step 3 failed: root"},
 		},
 	}
 
@@ -83,23 +88,20 @@ func TestWithMessagef(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := errors.WithMessagef(tc.args.err, tc.args.format, tc.args.args...)
 			require.NotNil(t, got)
-			assert.Equal(t, tc.expects.want, got.Error())
-			assert.Equal(t, root, errors.Unwrap(got))
+			assert.Equal(t, tc.expects.wantError, got.Error())
+			assert.True(t, errors.Is(got, tc.args.err))
+			assert.True(t, errors.HasStack(got))
 		})
 	}
 }
 
-func TestWithMessage_Error(t *testing.T) {
+func TestMessage(t *testing.T) {
 	type Args struct {
-		inner   error
-		message string
+		err error
 	}
 	type Expects struct {
-		want      string
-		wantInner string
+		want string
 	}
-
-	inner := errors.New("inner")
 
 	testCases := []struct {
 		name    string
@@ -107,66 +109,57 @@ func TestWithMessage_Error(t *testing.T) {
 		expects Expects
 	}{
 		{
-			name: "returns-annotation-only",
-			args: Args{
-				inner:   inner,
-				message: "while saving",
-			},
-			expects: Expects{
-				want:      "while saving",
-				wantInner: "inner",
-			},
+			name:    "nil",
+			args:    Args{err: nil},
+			expects: Expects{want: ""},
 		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := errors.WithMessage(tc.args.inner, tc.args.message)
-			require.NotNil(t, got)
-			assert.Equal(t, tc.expects.want, got.Error())
-			assert.Equal(t, tc.expects.wantInner, tc.args.inner.Error())
-		})
-	}
-}
-
-func TestWithMessagef_Error(t *testing.T) {
-	type Args struct {
-		inner  error
-		format string
-		args   []any
-	}
-	type Expects struct {
-		want      string
-		wantInner string
-	}
-
-	inner := errors.New("inner")
-
-	testCases := []struct {
-		name    string
-		args    Args
-		expects Expects
-	}{
 		{
-			name: "formats-annotation-only",
-			args: Args{
-				inner:  inner,
-				format: "user %s not found",
-				args:   []any{"alice"},
-			},
+			name:    "plain-fundamental",
+			args:    Args{err: errors.New("x")},
+			expects: Expects{want: ""},
+		},
+		{
+			name: "stdlib-without-message-interface",
+			args: Args{err: fmt.Errorf("stdlib: %w", stderrors.New("inner"))},
 			expects: Expects{
-				want:      "user alice not found",
-				wantInner: "inner",
+				want: "",
 			},
+		},
+		{
+			name: "single-with-message",
+			args: Args{
+				err: errors.WithMessage(errors.New("leaf"), "annot"),
+			},
+			expects: Expects{want: "annot"},
+		},
+		{
+			name: "nested-create-tenant-duplicate-slug",
+			args: Args{
+				err: errors.WithMessage(
+					errors.WithMessage(
+						errors.New(`duplicate key value violates unique constraint "tenants_slug_key"`),
+						"slug already in use",
+					),
+					"create tenant",
+				),
+			},
+			expects: Expects{want: "create tenant: slug already in use"},
+		},
+		{
+			name: "skips-wrap-without-message-interface",
+			args: Args{
+				err: errors.Wrap(
+					errors.WithMessage(errors.New("leaf"), "annot"),
+					"wrapped",
+				),
+			},
+			expects: Expects{want: "annot"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := errors.WithMessagef(tc.args.inner, tc.args.format, tc.args.args...)
-			require.NotNil(t, got)
-			assert.Equal(t, tc.expects.want, got.Error())
-			assert.Equal(t, tc.expects.wantInner, tc.args.inner.Error())
+			assert.Equal(t, tc.expects.want, errors.Message(tc.args.err))
 		})
 	}
 }
@@ -176,14 +169,13 @@ func TestWithMessage_Format(t *testing.T) {
 		err error
 	}
 	type Expects struct {
-		wantS         string
-		wantQ         string
-		wantV         string
-		vPlusContains []string
+		wantS           string
+		wantV           string
+		wantQ           string
+		wantVPlus       string
+		wantVPlusPrefix string
+		vPlusContains   []string
 	}
-
-	inner := errors.New("inner")
-	err := errors.WithMessage(inner, "annot")
 
 	testCases := []struct {
 		name    string
@@ -192,12 +184,70 @@ func TestWithMessage_Format(t *testing.T) {
 	}{
 		{
 			name: "with-message",
-			args: Args{err: err},
+			args: Args{
+				err: errors.WithMessage(errors.New("inner"), "outer"),
+			},
 			expects: Expects{
-				wantS:         "annot",
-				wantQ:         "annot",
-				wantV:         "annot",
-				vPlusContains: []string{"inner", "annot"},
+				wantS:           "outer: inner",
+				wantV:           "outer: inner",
+				wantQ:           "\"outer: inner\"",
+				wantVPlusPrefix: "outer\ninner",
+				vPlusContains:   []string{"runtime."},
+			},
+		},
+		{
+			name: "with-messagef",
+			args: Args{
+				err: errors.WithMessagef(errors.New("inner"), "step %d", 9),
+			},
+			expects: Expects{
+				wantS:           "step 9: inner",
+				wantV:           "step 9: inner",
+				wantQ:           "\"step 9: inner\"",
+				wantVPlusPrefix: "step 9\ninner",
+				vPlusContains:   []string{"runtime."},
+			},
+		},
+		{
+			name: "nested-with-message",
+			args: Args{
+				err: errors.WithMessage(
+					errors.WithMessage(errors.New("leaf"), "mid"),
+					"outer",
+				),
+			},
+			expects: Expects{
+				wantS:           "outer: mid: leaf",
+				wantV:           "outer: mid: leaf",
+				wantQ:           "\"outer: mid: leaf\"",
+				wantVPlusPrefix: "outer\nmid\nleaf",
+				vPlusContains:   []string{"runtime."},
+			},
+		},
+		{
+			name: "message-contains-colon",
+			args: Args{
+				err: errors.WithMessage(errors.New("inner"), "rpc: failed"),
+			},
+			expects: Expects{
+				wantS:           "rpc: failed: inner",
+				wantV:           "rpc: failed: inner",
+				wantQ:           "\"rpc: failed: inner\"",
+				wantVPlusPrefix: "rpc: failed\ninner",
+				vPlusContains:   []string{"runtime."},
+			},
+		},
+		{
+			name: "stdlib-cause",
+			args: Args{
+				err: errors.WithMessage(fmt.Errorf("stdlib leaf"), "annot"),
+			},
+			expects: Expects{
+				wantS:           "annot: stdlib leaf",
+				wantV:           "annot: stdlib leaf",
+				wantQ:           "\"annot: stdlib leaf\"",
+				wantVPlusPrefix: "annot\nstdlib leaf",
+				vPlusContains:   []string{"runtime."},
 			},
 		},
 	}
@@ -209,8 +259,15 @@ func TestWithMessage_Format(t *testing.T) {
 			assert.Equal(t, tc.expects.wantV, fmt.Sprintf("%v", tc.args.err))
 
 			gotPlus := fmt.Sprintf("%+v", tc.args.err)
-			for _, sub := range tc.expects.vPlusContains {
-				assert.Contains(t, gotPlus, sub)
+			switch {
+			case tc.expects.wantVPlusPrefix != "":
+				assert.True(t, len(gotPlus) >= len(tc.expects.wantVPlusPrefix))
+				assert.Equal(t, tc.expects.wantVPlusPrefix, gotPlus[:len(tc.expects.wantVPlusPrefix)])
+				for _, sub := range tc.expects.vPlusContains {
+					assert.Contains(t, gotPlus, sub)
+				}
+			default:
+				assert.Equal(t, tc.expects.wantVPlus, gotPlus)
 			}
 		})
 	}

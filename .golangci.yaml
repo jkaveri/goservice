@@ -15,6 +15,13 @@ linters:
     - unused
     - wsl_v5
   settings:
+    errcheck:
+      # fmt.Formatter implementations and similar: writes to fmt.State rarely fail.
+      exclude-functions:
+        - io.WriteString
+        - fmt.Fprintf
+        - fmt.Fprint
+        - fmt.Fprintln
     revive:
       max-open-files: 2048
       confidence: 0.8

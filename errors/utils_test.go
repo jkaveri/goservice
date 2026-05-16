@@ -44,7 +44,7 @@ func TestWalkErrorChain(t *testing.T) {
 				err: errors.Wrap(errors.New("root"), "outer"),
 			},
 			expects: Expects{
-				wantMessages: []string{"outer", "root"},
+				wantMessages: []string{"outer: root", "root", "root"},
 			},
 		},
 		{
@@ -89,8 +89,9 @@ func TestWalkErrorChain(t *testing.T) {
 			},
 			expects: Expects{
 				wantMessages: []string{
-					"outer\nsibling",
-					"outer",
+					"outer: inner\nsibling",
+					"outer: inner",
+					"inner",
 					"inner",
 					"sibling",
 				},
@@ -133,7 +134,7 @@ func TestWalkErrorChainStopOnTrue(t *testing.T) {
 				err: errors.Wrap(errors.New("inner"), "outer"),
 			},
 			expects: Expects{
-				wantMessages: []string{"outer", "inner"},
+				wantMessages: []string{"outer: inner", "inner"},
 			},
 		},
 		{

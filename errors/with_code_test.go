@@ -19,11 +19,10 @@ func Test_WithCode(t *testing.T) {
 	codeContainer, ok := errWithCode.(errors.CodeError)
 	assert.True(t, ok)
 	assert.Equal(t, "T123", codeContainer.Code())
-	assert.Equal(t, err, errors.Unwrap(errWithCode))
-	assert.Equal(t, "test", errWithCode.Error())
-	assert.Contains(t, fmt.Sprintf("%+v", errWithCode), "[T123] test")
-	assert.Contains(t, fmt.Sprintf("%s", errWithCode), "test")
-	assert.Contains(t, fmt.Sprintf("%q", errWithCode), "test")
+	assert.True(t, errors.Is(errWithCode, err))
+	assert.Equal(t, "[T123] test", errWithCode.Error())
+	assert.Contains(t, fmt.Sprintf("%+v", errWithCode), "[T123]")
+	assert.Contains(t, fmt.Sprintf("%+v", errWithCode), "test")
 }
 
 func TestWithCode_Error(t *testing.T) {
@@ -46,7 +45,7 @@ func TestWithCode_Error(t *testing.T) {
 				err:  errors.New("boom"),
 				code: "E1",
 			},
-			expects: Expects{want: "boom"},
+			expects: Expects{want: "[E1] boom"},
 		},
 		{
 			name: "delegates-to-wrapped-err",
@@ -54,7 +53,7 @@ func TestWithCode_Error(t *testing.T) {
 				err:  errors.Wrap(errors.New("inner"), "outer"),
 				code: "E2",
 			},
-			expects: Expects{want: "outer"},
+			expects: Expects{want: "[E2] outer: inner"},
 		},
 		{
 			name: "empty-err-message",
@@ -62,7 +61,7 @@ func TestWithCode_Error(t *testing.T) {
 				err:  errors.New(""),
 				code: "E3",
 			},
-			expects: Expects{want: ""},
+			expects: Expects{want: "[E3] "},
 		},
 	}
 
@@ -149,9 +148,9 @@ func TestWithCode_Format(t *testing.T) {
 			name: "with-code",
 			args: Args{err: err},
 			expects: Expects{
-				wantS:         "inner",
-				wantQ:         "inner",
-				wantV:         "inner",
+				wantS:         "[E1] inner",
+				wantQ:         "\"[E1] inner\"",
+				wantV:         "[E1] inner",
 				vPlusContains: []string{"[E1]", "inner"},
 			},
 		},
